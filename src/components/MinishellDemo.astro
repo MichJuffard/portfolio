@@ -1,0 +1,162 @@
+---
+import preview from '../assets/minishell-tree.svg';
+const examples = [
+  { label: 'Échec & secours', value: 'return 1 && echo "ignoré" || echo "secours"' },
+  { label: 'Succès & court-circuit', value: 'echo "bonjour" && echo "succès" || echo "ignoré"' },
+  { label: 'Pipeline', value: 'cat projets.txt | grep miniRT && echo "trouvé"' },
+  { label: 'Redirections', value: 'echo "bonjour" > message.txt && cat < message.txt | tr a-z A-Z' },
+  { label: 'Parenthèses', value: '(return 1 || echo "secours") && echo "suite"' },
+];
+---
+<section class="ms-demo" data-minishell aria-labelledby="ms-title">
+  <header><p class="eyebrow">MINISHELL / DU NŒUD AU PROCESSUS</p><h2 id="ms-title">Une commande. Un arbre. Un chemin d’exécution.</h2><p>Ma partie : parcourir l’arbre, exécuter les commandes et décider quelles branches visiter selon les statuts de retour.</p></header>
+  <div class="ms-interactive" hidden>
+    <form><label for="ms-command">Votre commande</label><div class="ms-input"><span aria-hidden="true">❯</span><input id="ms-command" name="command" maxlength="512" value={examples[0].value} spellcheck="false" autocomplete="off" /><button type="submit">Construire & exécuter →</button></div></form>
+    <div class="ms-examples" role="group" aria-label="Commandes d’exemple">{examples.map(example => <button type="button" data-example={example.value}>{example.label}</button>)}</div>
+    <p class="ms-error" data-error role="alert" hidden></p>
+    <p class="ms-scope">Simulation locale : echo, return, true, false, pwd, cd, ls, cat, grep (texte littéral), wc et tr (casse). Opérateurs : &&, ||, |, &lt;, &gt;, &gt;&gt; et parenthèses. Chaque lancement recrée les fichiers virtuels README.md et projets.txt dans /portfolio.</p>
+  </div>
+  <div class="ms-graph" tabindex="0" role="region" aria-label="Arbre d’exécution, défilement horizontal disponible"><img src={preview.src} width="960" height="540" alt="Arbre binaire d’une commande : return 1 provoque l’ignorance de la branche droite de &&, puis || exécute echo secours." /><svg data-tree role="img" aria-label="Arbre de la commande saisie et état du parcours" data-hidden></svg></div>
+  <div class="ms-player" hidden>
+    <div class="ms-legend"><span class="current">Nœud courant</span><span class="done">Terminé</span><span class="skipped">Ignoré</span></div>
+    <div class="ms-controls"><button type="button" data-prev>← Précédent</button><button type="button" class="ms-primary" data-next>Pas suivant →</button><button type="button" data-finish>Voir le résultat</button><span data-progress></span></div>
+    <p class="ms-event" data-event role="status" aria-atomic="true"></p>
+    <div class="ms-terminals"><div><h3>Sortie du terminal simulé</h3><pre data-output></pre></div><div><h3>Fichiers virtuels</h3><pre data-files></pre></div></div>
+  </div>
+  <footer>Le parsing et la construction de l’arbre du projet sont le travail de mon binôme. Cette version web simplifiée illustre mon moteur d’exécution ; elle ne lance aucun processus système et ne reproduit pas toutes les règles d’un shell Unix.</footer>
+</section>
+<script>
+  import { simulateShell, flattenShell, nodeLabel, type ShellDemo, type ShellNode } from '../lib/minishell-demo';
+  const root = document.querySelector<HTMLElement>('[data-minishell]');
+  if (root) {
+    const input = root.querySelector<HTMLInputElement>('input')!;
+    const svg = root.querySelector<SVGSVGElement>('[data-tree]')!;
+    const error = root.querySelector<HTMLElement>('[data-error]')!;
+    const prev = root.querySelector<HTMLButtonElement>('[data-prev]')!;
+    const next = root.querySelector<HTMLButtonElement>('[data-next]')!;
+    let demo: ShellDemo, index = 0, launchedSource = ''; 
+    const namespace = 'http://www.w3.org/2000/svg';
+    const element = (tag: string, attributes: Record<string, string>, content?: string) => {
+      const node = document.createElementNS(namespace, tag);
+      for (const [key, value] of Object.entries(attributes)) node.setAttribute(key, value);
+      if (content !== undefined) node.textContent = content;
+      return node;
+    };
+    const update = () => {
+      const step = demo.steps[index];
+      const nodes = flattenShell(demo.tree);
+      const positions = new Map<number, { x: number; y: number }>();
+      let leaf = 0, maxDepth = 0;
+      const position = (node: ShellNode, depth: number): number => {
+        maxDepth = Math.max(depth, maxDepth);
+        const children = [node.left, node.right].filter((n): n is ShellNode => !!n);
+        const xs = children.map(child => position(child, depth + 1));
+        const x = xs.length ? xs.reduce((a, b) => a + b) / xs.length : 110 + leaf++ * 190;
+        positions.set(node.id, { x, y: 48 + depth * 130 }); return x;
+      };
+      position(demo.tree, 0);
+      const width = Math.max(660, leaf * 190 + 30), height = (maxDepth + 1) * 130 + 10;
+      const offset = (width - (leaf * 190 + 30)) / 2;
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+      svg.style.width = `${width}px`;
+      svg.replaceChildren();
+      for (const node of nodes) {
+        const p = positions.get(node.id)!;
+        for (const child of [node.left, node.right]) if (child) {
+          const q = positions.get(child.id)!;
+          svg.append(element('line', { x1: String(p.x + offset), y1: String(p.y + 58), x2: String(q.x + offset), y2: String(q.y - 24), class: `ms-edge ${step.states[child.id] ?? ''}` }));
+        }
+      }
+      for (const node of nodes) {
+        const p = positions.get(node.id)!;
+        const status = step.states[node.id] ?? 'pending';
+        const current = step.node === node.id;
+        const group = element('g', { class: `ms-node ${status}${current ? ' current' : ''}`, transform: `translate(${p.x + offset},${p.y})` });
+        const label = nodeLabel(node);
+        group.append(element('title', {}, `${label}${node.grouped ? ' (groupe entre parenthèses)' : ''} — ${status === 'skipped' ? 'ignoré' : status === 'done' ? `statut ${step.codes[node.id]}` : current ? 'nœud courant' : 'en attente'}`));
+        group.append(element('rect', { x: '-84', y: '-24', width: '168', height: '48', rx: '7' }));
+        group.append(element('text', { 'text-anchor': 'middle', y: '5' }, label.length > 21 ? label.slice(0, 20) + '…' : label));
+        const caption = status === 'skipped' ? 'ignoré' : status === 'done' ? `retour ${step.codes[node.id]}` : node.grouped ? 'groupe (…)' : node.type === 'cmd' ? 'commande' : 'opérateur';
+        group.append(element('text', { 'text-anchor': 'middle', y: '44', class: 'ms-caption' }, caption));
+        svg.append(group);
+      }
+      svg.setAttribute('aria-label', `Arbre de ${launchedSource}. Étape ${index + 1} sur ${demo.steps.length}. ${step.message}`);
+      root.querySelector('[data-event]')!.textContent = step.message;
+      root.querySelector('[data-progress]')!.textContent = `${index + 1} / ${demo.steps.length}`;
+      root.querySelector('[data-output]')!.textContent = (step.stdout || '') + (step.stderr ? `\n[stderr]\n${step.stderr}` : '') + (index === demo.steps.length - 1 ? `\n[statut final : ${demo.code}]` : '') || 'Aucune sortie à cette étape.';
+      root.querySelector('[data-files]')!.textContent = Object.entries(step.files).map(([path, value]) => `${path}\n${value || '(vide)'} `).join('\n');
+      const viewport = root.querySelector<HTMLElement>('.ms-graph')!;
+      viewport.scrollLeft = positions.get(step.node)!.x + offset - viewport.clientWidth / 2;
+      prev.disabled = index === 0; next.disabled = index === demo.steps.length - 1;
+    };
+    const launch = () => {
+      try {
+        const result = simulateShell(input.value);
+        demo = result; index = 0; launchedSource = input.value;
+        error.hidden = true; root.querySelector<HTMLImageElement>('.ms-graph img')!.hidden = true;
+        svg.removeAttribute('data-hidden');
+        root.querySelector<HTMLElement>('.ms-player')!.hidden = false;
+        update();
+      } catch (e) {
+        error.textContent = (e as Error).message; error.hidden = false;
+        root.querySelector<HTMLElement>('.ms-player')!.hidden = true;
+        svg.setAttribute('data-hidden', ''); root.querySelector<HTMLImageElement>('.ms-graph img')!.hidden = false;
+      }
+    };
+    root.querySelector('form')!.addEventListener('submit', e => { e.preventDefault(); launch(); });
+    root.querySelectorAll<HTMLButtonElement>('[data-example]').forEach(button => button.addEventListener('click', () => { input.value = button.dataset.example!; launch(); }));
+    prev.addEventListener('click', () => { if (index > 0) { index--; update(); } });
+    next.addEventListener('click', () => { if (index < demo.steps.length - 1) { index++; update(); } });
+    root.querySelector('[data-finish]')!.addEventListener('click', () => { index = demo.steps.length - 1; update(); });
+    root.querySelector<HTMLElement>('.ms-interactive')!.hidden = false;
+    launch();
+  }
+</script>
+<style is:global>
+  .ms-demo { margin: 8px 0 56px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .ms-demo header { padding: 28px; }
+  .ms-demo .eyebrow { font-size: .6rem; margin-bottom: 12px; }
+  .ms-demo h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); }
+  .ms-demo header > p:last-child { color: var(--muted); font-size: .85rem; margin-top: 14px; }
+  .ms-demo [hidden], .ms-demo [data-hidden] { display: none !important; }
+  .ms-interactive { padding: 0 28px 22px; }
+  .ms-demo label { font-size: .8rem; display: block; margin-bottom: 10px; }
+  .ms-input { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .ms-input > span { color: var(--accent); }
+  .ms-input input { min-width: 160px; flex: 1; width: 100%; padding: 12px; border: 1px solid var(--line); background: var(--bg); border-radius: 4px; color: var(--text); font: .76rem var(--mono); }
+  .ms-demo button { cursor: pointer; font: inherit; font-size: .74rem; padding: 10px 12px; border: 1px solid var(--line); border-radius: 4px; color: var(--text); background: var(--bg); }
+  .ms-demo button:disabled { opacity: .45; cursor: default; }
+  .ms-demo input:focus-visible, .ms-demo button:focus-visible, .ms-graph:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .ms-demo form button, .ms-demo .ms-primary { background: var(--accent); color: #17152c; border-color: var(--accent); }
+  .ms-demo form button:hover, .ms-demo .ms-primary:hover { background: #ccc9ff; }
+  .ms-examples { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .ms-examples button { font-size: .65rem; }
+  .ms-scope { font-size: .7rem; color: var(--muted); margin-top: 16px; }
+  .ms-error { color: #ffc4c4; margin-top: 16px; font-size: .8rem; }
+  .ms-graph { overflow-x: auto; background: var(--bg); border-block: 1px solid var(--line); }
+  .ms-graph img { display: block; width: 100%; height: auto; }
+  .ms-graph svg { display: block; max-width: none; min-width: 100%; height: auto; }
+  .ms-edge { stroke: #485169; stroke-width: 2; }
+  .ms-edge.done { stroke: #84c7eb; }
+  .ms-edge.skipped { stroke-dasharray: 5 5; stroke: #656d82; }
+  .ms-node rect { fill: #1b2030; stroke: #485169; }
+  .ms-node text { fill: #e6e9f2; font: 13px ui-monospace, monospace; }
+  .ms-node .ms-caption { fill: #c1c8da; font-size: 12px; }
+  .ms-node.done rect { stroke: #84c7eb; }
+  .ms-node.skipped rect { fill: #151924; stroke: #656d82; stroke-dasharray: 5 4; }
+  .ms-node.skipped text { fill: #929bb0; }
+  .ms-node.current rect { stroke: #b5b0ff; stroke-width: 3; fill: #292841; }
+  .ms-node.current text { fill: #e9e6ff; }
+  .ms-player { padding: 22px 28px; }
+  .ms-legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: .66rem; margin-bottom: 20px; }
+  .ms-legend .current { color: #b5b0ff; } .ms-legend .done { color: #84c7eb; } .ms-legend .skipped { color: #929bb0; }
+  .ms-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .ms-controls > span { font: .65rem var(--mono); color: var(--muted); margin-left: auto; }
+  .ms-event { min-height: 70px; padding-block: 20px; color: var(--text); font-size: .85rem; }
+  .ms-terminals { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ms-terminals > div { border: 1px solid var(--line); background: var(--bg); border-radius: 5px; min-width: 0; }
+  .ms-terminals h3 { padding: 12px; font: .65rem var(--mono); color: var(--accent); border-bottom: 1px solid var(--line); }
+  .ms-terminals pre { margin: 0; padding: 14px; font: .72rem/1.8 var(--mono); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 260px; overflow-y: auto; }
+  .ms-demo footer { border-top: 1px solid var(--line); padding: 20px 28px; font-size: .72rem; color: var(--muted); }
+  @media(max-width:600px) { .ms-demo header, .ms-player, .ms-demo footer { padding: 20px 18px; } .ms-interactive { padding-inline: 18px; } .ms-terminals { grid-template-columns: 1fr; } .ms-input button { width: 100%; } }
+</style>

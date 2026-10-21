@@ -1,0 +1,50 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
+const categories = [...new Set(projects.map(project => project.data.category))];
+---
+<BaseLayout title="Projets" description="Projets d’école et expérimentations personnelles de Michel Juffard en développement, systèmes, réseaux et cybersécurité."><section class="page-intro"><p class="eyebrow">~/projets</p><h1>Des compétences<br />mises en pratique.</h1><p>Développement, systèmes, réseau et sécurité : parcourez les projets d’école et personnels, chacun présenté dans une seule catégorie.</p></section>
+  <section class="project-browser" data-project-browser aria-label="Projets par catégorie">
+    <div class="project-filters" data-project-filters role="group" aria-label="Filtrer les projets par catégorie" hidden>
+      <button type="button" data-project-filter="all" aria-pressed="true">Tous</button>
+      {categories.map(category => <button type="button" data-project-filter={category} aria-pressed="false">{category}</button>)}
+    </div>
+    <p class="visually-hidden" data-project-filter-status role="status" aria-live="polite"></p>
+    <div class="project-grid" data-project-list>
+      {projects.map(project => <ProjectCard project={project} />)}
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const browser = document.querySelector<HTMLElement>('[data-project-browser]');
+  const filters = browser?.querySelector<HTMLElement>('[data-project-filters]');
+  const cards = [...(browser?.querySelectorAll<HTMLElement>('[data-project-card]') ?? [])];
+  const status = browser?.querySelector<HTMLElement>('[data-project-filter-status]');
+  const buttons = [...(filters?.querySelectorAll<HTMLButtonElement>('[data-project-filter]') ?? [])];
+
+  if (filters && cards.length > 0) {
+    filters.hidden = false;
+
+    const applyFilter = (category: string) => {
+      let visibleCount = 0;
+      for (const card of cards) {
+        const visible = category === 'all' || card.dataset.category === category;
+        card.hidden = !visible;
+        if (visible) visibleCount += 1;
+      }
+
+      for (const button of buttons) {
+        button.setAttribute('aria-pressed', String(button.dataset.projectFilter === category));
+      }
+      if (status) status.textContent = `${visibleCount} projet${visibleCount === 1 ? '' : 's'} affiché${visibleCount === 1 ? '' : 's'}.`;
+    };
+
+    for (const button of buttons) {
+      button.addEventListener('click', () => applyFilter(button.dataset.projectFilter ?? 'all'));
+    }
+    applyFilter('all');
+  }
+</script>

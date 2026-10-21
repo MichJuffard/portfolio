@@ -1,0 +1,200 @@
+---
+import { homelabMonitoringDemo } from '../data/homelab-monitoring-demo';
+import {
+  formatMonitoringPercent,
+  formatMonitoringTimestamp,
+  isAllowedPublicMetricsEndpoint,
+  getMonitoringMetricLabel,
+  getMonitoringScopeLabel,
+  getMonitoringStateLabel,
+  monitoringMetricNames,
+} from '../lib/homelab-monitoring';
+
+const configuredEndpoint = import.meta.env.PUBLIC_HOMELAB_METRICS_URL?.trim();
+if (configuredEndpoint && !isAllowedPublicMetricsEndpoint(configuredEndpoint)) {
+  throw new Error('PUBLIC_HOMELAB_METRICS_URL must be an HTTPS public JSON URL without credentials or query parameters.');
+}
+const publicEndpoint = configuredEndpoint || undefined;
+const snapshot = publicEndpoint ? null : homelabMonitoringDemo;
+const state = snapshot ? 'demo' : 'unavailable';
+const initialTimestamp = snapshot ? formatMonitoringTimestamp(snapshot.measuredAt) : 'Aucune mesure reçue';
+const note = snapshot
+  ? 'Exemple entièrement fictif. Aucun serveur, collecteur ou service de supervision n’est interrogé.'
+  : 'Aucune mesure n’est incluse dans la page statique. Le chargement de la source publique nécessite JavaScript.';
+---
+
+<section class="monitor-panel" data-monitor-panel data-endpoint={publicEndpoint} aria-labelledby="monitor-title">
+  <header class="monitor-header">
+    <div>
+      <p class="eyebrow">SUPERVISION · APERÇU</p>
+      <h2 id="monitor-title">État des ressources</h2>
+    </div>
+    <span class="monitor-state" data-monitor-state={state} role="status" aria-live="polite">{getMonitoringStateLabel(state)}</span>
+  </header>
+
+  <p class="monitor-note" data-monitor-note>{note}</p>
+
+  <dl class="monitor-meta">
+    <div>
+      <dt>Périmètre</dt>
+      <dd data-monitor-scope>{snapshot ? getMonitoringScopeLabel(snapshot.scope) : 'Non disponible'}</dd>
+    </div>
+    <div>
+      <dt>Dernière mesure</dt>
+      <dd><time data-monitor-time datetime={snapshot?.measuredAt} aria-live="off">{initialTimestamp}</time></dd>
+    </div>
+  </dl>
+
+  <dl class="monitor-metrics" aria-label="Métriques du périmètre sélectionné">
+    {monitoringMetricNames.map(name => {
+      const value = snapshot?.metrics[name] ?? null;
+      const label = name === 'cpuPercent' ? 'CPU' : name === 'memoryPercent' ? 'Mémoire' : 'Stockage';
+      return (
+        <div class="monitor-metric">
+          <dt>{label}</dt>
+          <dd>
+            <span data-monitor-value={name}>{formatMonitoringPercent(value)}</span>
+            <meter
+              data-monitor-meter={name}
+              min="0"
+              max="100"
+              value={value ?? undefined}
+              hidden={value === null}
+              aria-label={`${getMonitoringMetricLabel(name)} — ${snapshot ? getMonitoringScopeLabel(snapshot.scope) : 'périmètre inconnu'}`}
+            ></meter>
+          </dd>
+        </div>
+      );
+    })}
+  </dl>
+
+  <p class="monitor-footnote">Les pourcentages sont associés au périmètre indiqué. Aucune adresse, aucun nom interne et aucun détail de service n’est affiché.</p>
+</section>
+
+<script>
+  import {
+    formatMonitoringPercent,
+    formatMonitoringTimestamp,
+    getMonitoringFailureState,
+    getMonitoringMetricLabel,
+    getMonitoringScopeLabel,
+    getMonitoringState,
+    getMonitoringStateLabel,
+    MONITORING_REFRESH_MS,
+    monitoringMetricNames,
+    validateMonitoringSnapshot,
+  } from '../lib/homelab-monitoring';
+  import type { MonitoringSnapshot, MonitoringState } from '../types/homelab-monitoring';
+
+  const root = document.querySelector<HTMLElement>('[data-monitor-panel]');
+  const endpoint = root?.dataset.endpoint;
+
+  if (root && endpoint) {
+    const stateElement = root.querySelector<HTMLElement>('[data-monitor-state]');
+    const noteElement = root.querySelector<HTMLElement>('[data-monitor-note]');
+    const scopeElement = root.querySelector<HTMLElement>('[data-monitor-scope]');
+    const timeElement = root.querySelector<HTMLTimeElement>('[data-monitor-time]');
+    let lastSnapshot: MonitoringSnapshot | null = null;
+
+    const renderState = (state: MonitoringState) => {
+      root.dataset.state = state;
+      if (stateElement && stateElement.dataset.monitorState !== state) {
+        stateElement.dataset.monitorState = state;
+        stateElement.textContent = getMonitoringStateLabel(state);
+      }
+    };
+
+    const renderSnapshot = (snapshot: MonitoringSnapshot | null, state: MonitoringState) => {
+      renderState(state);
+
+      if (!snapshot) {
+        if (scopeElement) scopeElement.textContent = 'Non disponible';
+        if (timeElement) {
+          timeElement.textContent = 'Aucune mesure reçue';
+          timeElement.removeAttribute('datetime');
+        }
+        for (const name of monitoringMetricNames) {
+          const valueElement = root.querySelector<HTMLElement>(`[data-monitor-value="${name}"]`);
+          const meter = root.querySelector<HTMLMeterElement>(`[data-monitor-meter="${name}"]`);
+          if (valueElement) valueElement.textContent = 'Indisponible';
+          if (meter) {
+            meter.hidden = true;
+            meter.removeAttribute('value');
+          }
+        }
+        return;
+      }
+
+      if (scopeElement) scopeElement.textContent = getMonitoringScopeLabel(snapshot.scope);
+      if (timeElement) {
+        timeElement.dateTime = snapshot.measuredAt;
+        timeElement.textContent = formatMonitoringTimestamp(snapshot.measuredAt);
+      }
+
+      for (const name of monitoringMetricNames) {
+        const value = snapshot.metrics[name];
+        const valueElement = root.querySelector<HTMLElement>(`[data-monitor-value="${name}"]`);
+        let meter = root.querySelector<HTMLMeterElement>(`[data-monitor-meter="${name}"]`);
+        if (valueElement) valueElement.textContent = formatMonitoringPercent(value);
+
+        if (value === null) {
+          if (meter) {
+            meter.hidden = true;
+            meter.removeAttribute('value');
+          }
+          continue;
+        }
+
+        if (!meter) {
+          meter = document.createElement('meter');
+          meter.dataset.monitorMeter = name;
+          meter.min = 0;
+          meter.max = 100;
+          valueElement?.parentElement?.append(meter);
+        }
+        meter.value = value;
+        meter.hidden = false;
+        meter.setAttribute('aria-label', `${getMonitoringMetricLabel(name)} — ${getMonitoringScopeLabel(snapshot.scope)}`);
+      }
+    };
+
+    const refresh = async () => {
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 10_000);
+
+      try {
+        const response = await fetch(endpoint, {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error('La source publique n’a pas répondu correctement.');
+
+        const result = validateMonitoringSnapshot(await response.json());
+        if (!result.ok) throw new Error(result.reason);
+
+        lastSnapshot = result.snapshot;
+        const state = getMonitoringState(lastSnapshot);
+        renderSnapshot(lastSnapshot, state);
+        if (noteElement) {
+          noteElement.textContent = state === 'unavailable'
+            ? 'La source a répondu, mais aucune métrique exploitable n’est disponible.'
+            : 'Mesures reçues depuis une source JSON publique. Elles ne permettent pas de conclure à la disponibilité des services.';
+        }
+      } catch {
+        const state = getMonitoringFailureState(lastSnapshot);
+        renderSnapshot(lastSnapshot, state);
+        if (noteElement) {
+          noteElement.textContent = lastSnapshot
+            ? 'La récupération a échoué. Les valeurs affichées proviennent de la dernière mesure valide reçue.'
+            : 'Récupération impossible : aucune mesure publique exploitable n’a été reçue.';
+        }
+      } finally {
+        window.clearTimeout(timeout);
+      }
+    };
+
+    void refresh();
+    window.setInterval(() => void refresh(), MONITORING_REFRESH_MS);
+  }
+</script>

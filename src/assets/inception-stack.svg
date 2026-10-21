@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" fill="none">
+<defs><linearGradient id="bg" x2="960" y2="540" gradientUnits="userSpaceOnUse"><stop stop-color="#22283d"/><stop offset="1" stop-color="#121520"/></linearGradient></defs><rect width="960" height="540" fill="url(#bg)"/>
+<g font-family="monospace"><text x="44" y="55" fill="#b5b0ff" font-size="13" letter-spacing="3">INCEPTION / UNE INFRASTRUCTURE EN CONTENEURS</text>
+<rect x="44" y="104" width="872" height="298" rx="14" stroke="#4d556f" stroke-dasharray="6 6"/><text x="65" y="133" fill="#8990ac" font-size="12">RÉSEAU DOCKER BRIDGE</text>
+<path d="M290 235h45m-10-8 10 8-10 8m297-8h45m-10-8 10 8-10 8" stroke="#b5b0ff" stroke-width="3"/>
+<rect x="65" y="177" width="225" height="116" rx="8" fill="#292841" stroke="#b5b0ff"/><text x="87" y="211" fill="#b5b0ff" font-size="12">ENTRÉE HTTPS :443</text><text x="87" y="245" fill="#f0f1f7" font-size="24">Nginx</text><text x="87" y="273" fill="#b0b6ca" font-size="13">TLS · virtual hosts</text>
+<rect x="335" y="177" width="297" height="116" rx="8" fill="#1b2534" stroke="#84c7eb"/><text x="358" y="211" fill="#84c7eb" font-size="12">APPLICATION / FASTCGI</text><text x="358" y="245" fill="#f0f1f7" font-size="24">WordPress</text><text x="358" y="273" fill="#b0b6ca" font-size="13">PHP-FPM · WP-CLI</text>
+<rect x="677" y="177" width="218" height="116" rx="8" fill="#242238" stroke="#a29bd3"/><text x="699" y="211" fill="#b5b0ff" font-size="12">BASE DE DONNÉES</text><text x="699" y="245" fill="#f0f1f7" font-size="24">MariaDB</text><text x="699" y="273" fill="#b0b6ca" font-size="13">Stockage persistant</text>
+<path d="M480 293v29H171m309 0h310" stroke="#4d556f" stroke-width="2"/>
+<g fill="#1b2030" stroke="#4d556f"><rect x="65" y="343" width="139" height="36" rx="5"/><rect x="215" y="343" width="139" height="36" rx="5"/><rect x="365" y="343" width="169" height="36" rx="5"/><rect x="545" y="343" width="169" height="36" rx="5"/><rect x="725" y="343" width="170" height="36" rx="5"/></g>
+<g fill="#b0b6ca" font-size="13" text-anchor="middle"><text x="134" y="366">Redis</text><text x="284" y="366">Adminer</text><text x="449" y="366">Portainer</text><text x="629" y="366">Site statique</text><text x="810" y="366">FTP</text></g>
+<path d="M175 402v32h612v-32m-304 0v32" stroke="#84c7eb" stroke-width="2"/><rect x="286" y="419" width="388" height="41" rx="20" fill="#1b2534" stroke="#3c526a"/><text x="327" y="445" fill="#84c7eb" font-size="14">4 VOLUMES / DONNÉES PERSISTANTES</text>
+<text x="44" y="506" fill="#8990ac" font-size="12">8 SERVICES · IMAGES PERSONNALISÉES · DOCKER COMPOSE</text></g></svg>

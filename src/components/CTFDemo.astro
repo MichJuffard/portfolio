@@ -1,0 +1,117 @@
+---
+import { ctfStages } from '../data/ctf';
+const initial = ctfStages[0];
+---
+<section class="ctf-demo" data-ctf aria-labelledby="ctf-title">
+  <header><p class="eyebrow">SNOWCRASH / RAINFALL / OVERRIDE</p><h2 id="ctf-title">Observer. Comprendre. Remettre en question.</h2><p>Trois séries de CTF pour découvrir la cybersécurité offensive et mieux comprendre le fonctionnement des programmes et de la mémoire.</p></header>
+  <div class="ctf-journey">
+    <div class="ctf-stages" role="group" aria-label="Explorer une série de CTF">{ctfStages.map((stage, i) => <button type="button" data-stage={stage.id} aria-pressed={i === 0} disabled><span>0{i + 1}</span><strong>{stage.title}</strong><small>{stage.subtitle}</small></button>)}</div>
+    <div class="ctf-stage-detail" aria-live="polite" aria-atomic="true"><h3 data-stage-title>{initial.subtitle}</h3><p data-description>{initial.description}</p><ul data-concepts>{initial.concepts.map(concept => <li>{concept}</li>)}</ul><p class="ctf-memory-note" data-memory-note>{initial.memory}</p><p class="ctf-tools" data-tools>{initial.tools}</p></div>
+  </div>
+  <div class="ctf-memory">
+    <h3>Pourquoi un seul octet compte.</h3><p>Dans ce modèle simplifié, un buffer de 8 octets est suivi de deux champs de données. Une copie non bornée peut dépasser sa zone et modifier ces champs.</p>
+    <div class="ctf-memory-controls" hidden>
+      <label for="ctf-length">Taille de l’entrée <output data-length>9 octets</output></label><input id="ctf-length" type="range" min="0" max="16" value="9" />
+      <div class="ctf-cases" role="group" aria-label="Tailles d’entrée d’exemple"><button type="button" data-size="8">8 · dans les limites</button><button type="button" data-size="9">9 · un octet en trop</button><button type="button" data-size="16">16 · débordement</button></div>
+      <label class="ctf-bounded"><input type="checkbox" data-bounded /> Limiter la copie à la capacité du buffer</label>
+    </div>
+    <div class="ctf-memory-map" tabindex="0" role="region" aria-label="Disposition simplifiée de 16 octets, défilement horizontal disponible">
+      <div class="ctf-bytes" role="list" aria-label="Octets de la zone mémoire">{Array.from({ length: 16 }, (_, i) => <div role="listitem" data-byte={i} class:list={['ctf-byte', i < 8 ? 'buffer' : 'neighbor', i < 9 ? 'written' : '', i === 8 ? 'overflow' : '']} aria-label={`Octet ${i + 1} : ${i < 8 ? 'buffer' : 'donnée voisine'}, ${i < 9 ? 'écrit' : 'inchangé'}`}><small>{i + 1}</small><strong>{i < 9 ? 'A' : '·'}</strong></div>)}</div>
+      <div class="ctf-zones"><span>Buffer · 8 octets</span><span>Champ voisin · 4 octets</span><span>Autre champ · 4 octets</span></div>
+    </div>
+    <p class="ctf-memory-status" data-memory-status role="status">9 octets copiés : le premier octet du champ voisin est modifié.</p>
+    <p class="ctf-layout-note">Disposition illustrative, pas une reproduction d’un binaire. Les objets ne sont pas nécessairement contigus : l’agencement réel dépend du programme, du compilateur et de l’allocateur. L’exemple compte les octets copiés ; il ne modélise pas les chaînes C ni leur terminateur nul.</p>
+  </div>
+  <footer>Illustration des notions étudiées dans les challenges. Aucun binaire, outil d’intrusion ou scénario d’exploitation n’est exécuté dans le portfolio.</footer>
+</section>
+<script>
+  import { ctfStages } from '../data/ctf';
+  const root = document.querySelector<HTMLElement>('[data-ctf]');
+  if (root) {
+    const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-stage]'));
+    const choose = (id: string) => {
+      const stage = ctfStages.find(s => s.id === id);
+      if (!stage) return;
+      buttons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.stage === stage.id)));
+      root.querySelector('[data-stage-title]')!.textContent = stage.subtitle;
+      root.querySelector('[data-description]')!.textContent = stage.description;
+      root.querySelector('[data-memory-note]')!.textContent = stage.memory;
+      root.querySelector('[data-tools]')!.textContent = stage.tools;
+      const list = root.querySelector('[data-concepts]')!;
+      list.replaceChildren(...stage.concepts.map(concept => { const li = document.createElement('li'); li.textContent = concept; return li; }));
+    };
+    buttons.forEach(button => { button.disabled = false; button.addEventListener('click', () => choose(button.dataset.stage!)); });
+    const fromHash = () => choose(window.location.hash.slice(1));
+    fromHash(); window.addEventListener('hashchange', fromHash);
+    const length = root.querySelector<HTMLInputElement>('#ctf-length')!;
+    const bounded = root.querySelector<HTMLInputElement>('[data-bounded]')!;
+    const bytes = Array.from(root.querySelectorAll<HTMLElement>('[data-byte]'));
+    const update = () => {
+      const requested = Number(length.value), copied = bounded.checked ? Math.min(8, requested) : requested;
+      root.querySelector('[data-length]')!.textContent = `${requested} octet${requested === 1 ? '' : 's'}`;
+      bytes.forEach((cell, i) => {
+        const written = i < copied, overflow = written && i >= 8;
+        cell.classList.toggle('written', written); cell.classList.toggle('overflow', overflow);
+        cell.querySelector('strong')!.textContent = written ? 'A' : '·';
+        cell.setAttribute('aria-label', `Octet ${i + 1} : ${i < 8 ? 'buffer' : 'donnée voisine'}, ${written ? 'écrit' : 'inchangé'}${overflow ? ', hors limites' : ''}`);
+      });
+      root.querySelector('[data-memory-status]')!.textContent = bounded.checked && requested > 8
+        ? `Copie limitée à 8 octets sur ${requested} : les champs voisins restent inchangés.`
+        : copied <= 8 ? `${copied} octet${copied === 1 ? '' : 's'} copié${copied === 1 ? '' : 's'} : la copie reste dans le buffer.`
+        : `${copied} octets copiés : ${copied - 8} octet${copied === 9 ? '' : 's'} écrit${copied === 9 ? '' : 's'} hors du buffer, dans les données voisines.`;
+    };
+    length.addEventListener('input', update); bounded.addEventListener('change', update);
+    root.querySelectorAll<HTMLButtonElement>('[data-size]').forEach(b => b.addEventListener('click', () => { length.value = b.dataset.size!; update(); }));
+    root.querySelector<HTMLElement>('.ctf-memory-controls')!.hidden = false;
+  }
+</script>
+<style>
+  .ctf-demo { margin: 8px 0 56px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  header { padding: 28px; }
+  .eyebrow { font-size: .6rem; margin-bottom: 12px; }
+  h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); }
+  header > p:last-child, .ctf-memory > p { font-size: .85rem; color: var(--muted); margin-top: 14px; }
+  .ctf-journey { padding: 0 28px 28px; }
+  .ctf-stages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  button { cursor: pointer; font: inherit; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--text); padding: 14px; text-align: left; }
+  button:disabled { cursor: default; }
+  button:focus-visible, input:focus-visible, .ctf-memory-map:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .ctf-stages button[aria-pressed=true] { background: #292841; border-color: var(--accent); }
+  .ctf-stages span { display: block; color: var(--accent); font: .6rem var(--mono); margin-bottom: 12px; }
+  .ctf-stages strong { font-size: 1rem; font-weight: 500; }
+  .ctf-stages small { display: block; font-size: .68rem; color: var(--muted); margin-top: 9px; }
+  .ctf-stage-detail { margin-top: 20px; padding: 22px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
+  h3 { font-size: 1.15rem; }
+  .ctf-stage-detail p { font-size: .82rem; color: var(--muted); margin-top: 14px; }
+  [data-concepts] { list-style: none; padding: 0; margin: 20px 0; display: flex; flex-wrap: wrap; gap: 8px; }
+  [data-concepts] li { font-size: .68rem; color: var(--accent); border: 1px solid var(--line); padding: 5px 8px; border-radius: 4px; }
+  .ctf-memory-note { border-left: 2px solid var(--accent); padding-left: 14px; }
+  .ctf-stage-detail .ctf-tools { font: .65rem/1.8 var(--mono); }
+  .ctf-memory { border-top: 1px solid var(--line); padding: 26px 28px; }
+  [hidden] { display: none !important; }
+  .ctf-memory-controls { margin-top: 24px; }
+  label { display: flex; align-items: center; gap: 10px; font-size: .8rem; }
+  output { margin-left: auto; color: var(--accent); font: .72rem var(--mono); }
+  input[type=range] { width: 100%; min-height: 30px; margin: 12px 0; accent-color: var(--accent); }
+  .ctf-cases { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ctf-cases button { padding: 9px 12px; font-size: .7rem; }
+  .ctf-bounded { margin-block: 20px; color: var(--muted); font-size: .75rem; }
+  input[type=checkbox] { width: 17px; height: 17px; accent-color: var(--accent); flex-shrink: 0; }
+  .ctf-memory-map { overflow-x: auto; padding: 4px 2px 12px; margin-top: 22px; }
+  .ctf-bytes { display: grid; grid-template-columns: repeat(16, minmax(32px, 1fr)); gap: 6px; min-width: 650px; }
+  .ctf-byte { border: 1px solid var(--line); border-radius: 4px; padding: 9px 0; text-align: center; background: var(--bg); }
+  .ctf-byte small { display: block; font: .55rem var(--mono); color: var(--muted); }
+  .ctf-byte strong { display: block; font: .9rem var(--mono); margin-top: 10px; color: var(--muted); }
+  .ctf-byte.buffer { border-color: #5e598b; }
+  .ctf-byte.written { background: #292841; }
+  .ctf-byte.written strong { color: var(--accent); }
+  .ctf-byte.overflow { border-color: #e5ae81; background: #49322c; }
+  .ctf-byte.overflow strong { color: #ffd5b4; }
+  .ctf-zones { display: grid; grid-template-columns: 2fr 1fr 1fr; min-width: 650px; gap: 10px; margin-top: 10px; font-size: .62rem; color: var(--muted); }
+  .ctf-zones span { border-top: 1px solid var(--line); padding-top: 10px; text-align: center; }
+  .ctf-zones span:first-child { color: var(--accent); }
+  .ctf-memory .ctf-memory-status { font-size: .8rem; color: var(--text); }
+  .ctf-memory .ctf-layout-note { font-size: .7rem; }
+  footer { border-top: 1px solid var(--line); padding: 20px 28px; font-size: .72rem; color: var(--muted); }
+  @media(max-width:600px) { header, .ctf-memory, footer { padding: 20px 18px; } .ctf-journey { padding-inline: 18px; } .ctf-stages { grid-template-columns: 1fr; } .ctf-stages button { display: grid; grid-template-columns: 24px 1fr; gap: 7px; } .ctf-stages span { grid-row: span 2; margin: 3px 0; } .ctf-stages small { margin: 0; } .ctf-stage-detail { padding: 16px; } }
+</style>

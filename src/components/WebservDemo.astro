@@ -1,0 +1,89 @@
+---
+import flow from '../assets/webserv-flow.svg';
+import { httpScenarios } from '../data/webserv';
+const initial = httpScenarios[0];
+const phases = ['Requête', 'Lecture & parsing', 'Traitement', 'Réponse'];
+---
+<section class="ws-demo" data-webserv aria-labelledby="ws-title">
+  <header><p class="eyebrow">DU NAVIGATEUR AU SERVEUR</p><h2 id="ws-title">Que se passe-t-il après un clic ?</h2><p>Suivez une requête à travers un serveur HTTP développé en C++.</p></header>
+  <img class="ws-diagram" src={flow.src} width="960" height="540" alt="Le navigateur transmet une requête au serveur C++ ; epoll signale les événements, le serveur analyse et traite la demande puis renvoie une réponse HTTP." />
+  <div class="ws-interaction" hidden>
+    <label class="ws-choice" for="ws-scenario">Explorer un cas <select id="ws-scenario">{httpScenarios.map(s => <option value={s.id}>{s.label}</option>)}</select></label>
+    <ol class="ws-phases" aria-label="Parcours de la requête">{phases.map((phase, i) => <li aria-current={i === 0 ? 'step' : undefined}><span>{String(i + 1).padStart(2, '0')}</span>{phase}</li>)}</ol>
+    <div class="ws-exchange">
+      <div><h3>CLIENT → SERVEUR</h3><pre data-request>{`${initial.method} ${initial.path} HTTP/1.1\nHost: exemple.local`}</pre></div>
+      <div><h3>SERVEUR → CLIENT</h3><pre data-response>En attente du traitement…</pre></div>
+    </div>
+    <div class="ws-explanation" role="status" aria-atomic="true"><h3 data-phase-title>01 / Requête</h3><p data-detail>{initial.details[0]}</p></div>
+    <div class="ws-actions"><button class="button primary" type="button" data-next>Étape suivante →</button><button type="button" data-reset>Recommencer</button><span data-progress>1 / 4</span></div>
+    <p class="ws-source"><span>Dans le code</span><code data-source>{initial.source}</code></p>
+  </div>
+  <footer>Simulation pédagogique : chemins, contenus et échanges sont illustratifs. Le serveur C++ n’est pas exécuté dans cette page.</footer>
+</section>
+<script>
+  import { httpScenarios } from '../data/webserv';
+  const root = document.querySelector<HTMLElement>('[data-webserv]');
+  if (root) {
+    const select = root.querySelector<HTMLSelectElement>('select')!;
+    const next = root.querySelector<HTMLButtonElement>('[data-next]')!;
+    const phases = Array.from(root.querySelectorAll<HTMLElement>('.ws-phases li'));
+    const titles = ['Requête', 'Lecture & parsing', 'Traitement', 'Réponse'];
+    let step = 0;
+    const update = () => {
+      const scenario = httpScenarios.find(s => s.id === select.value) ?? httpScenarios[0];
+      phases.forEach((phase, i) => {
+        if (i === step) phase.setAttribute('aria-current', 'step');
+        else phase.removeAttribute('aria-current');
+        phase.classList.toggle('complete', i < step);
+      });
+      root.querySelector('[data-request]')!.textContent = `${scenario.method} ${scenario.path} HTTP/1.1\nHost: exemple.local`;
+      root.querySelector('[data-response]')!.textContent = step === 3
+        ? `HTTP/1.1 ${scenario.status}\nContent-Type: text/html\n\n${scenario.body}` : 'En attente du traitement…';
+      root.querySelector('[data-phase-title]')!.textContent = `${String(step + 1).padStart(2, '0')} / ${titles[step]}`;
+      root.querySelector('[data-detail]')!.textContent = scenario.details[step];
+      root.querySelector('[data-progress]')!.textContent = `${step + 1} / 4`;
+      root.querySelector('[data-source]')!.textContent = scenario.source;
+      next.textContent = step === 3 ? 'Rejouer le parcours ↺' : 'Étape suivante →';
+    };
+    next.addEventListener('click', () => { step = (step + 1) % 4; update(); });
+    root.querySelector('[data-reset]')!.addEventListener('click', () => { step = 0; update(); });
+    select.addEventListener('change', () => { step = 0; update(); });
+    root.querySelector<HTMLElement>('.ws-interaction')!.hidden = false;
+  }
+</script>
+<style>
+  .ws-demo { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 8px 0 56px; }
+  header { padding: 28px; }
+  header .eyebrow { margin-bottom: 12px; font-size: .6rem; }
+  header h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); }
+  header > p:last-child { color: var(--muted); font-size: .85rem; margin-top: 14px; }
+  .ws-diagram { display: block; width: 100%; height: auto; }
+  .ws-interaction { padding: 26px 28px; }
+  [hidden] { display: none !important; }
+  .ws-choice { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; font-size: .84rem; }
+  select, button { font: inherit; }
+  select { background: var(--bg); color: var(--text); border: 1px solid var(--line); padding: 10px 12px; border-radius: 5px; max-width: 100%; }
+  .ws-phases { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; list-style: none; padding: 0; margin: 26px 0; }
+  .ws-phases li { border-top: 2px solid var(--line); padding-top: 12px; font-size: .73rem; color: var(--muted); }
+  .ws-phases span { display: block; font: .65rem var(--mono); margin-bottom: 8px; }
+  .ws-phases [aria-current] { border-color: var(--accent); color: var(--text); }
+  .ws-phases .complete { border-color: #7975af; }
+  .ws-exchange { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ws-exchange > div { min-width: 0; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); }
+  .ws-exchange h3 { font: .6rem var(--mono); color: var(--accent); border-bottom: 1px solid var(--line); padding: 14px; }
+  pre { font: .72rem/1.8 var(--mono); color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; padding: 14px; margin: 0; min-height: 145px; }
+  .ws-explanation { margin-block: 24px; min-height: 110px; }
+  .ws-explanation h3 { font-size: 1rem; margin-bottom: 10px; letter-spacing: -.01em; }
+  .ws-explanation p { color: var(--muted); font-size: .85rem; }
+  .ws-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
+  button { cursor: pointer; border: 1px solid var(--line); border-radius: 4px; padding: 10px 14px; color: var(--text); background: transparent; font-size: .78rem; }
+  .primary { background: var(--accent); color: #17152c; border-color: var(--accent); }
+  .primary:hover { background: #ccc9ff; border-color: #ccc9ff; }
+  button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+  [data-progress] { margin-left: auto; font: .7rem var(--mono); color: var(--muted); }
+  .ws-source { border-top: 1px solid var(--line); margin: 24px 0 0; padding-top: 16px; overflow-wrap: anywhere; }
+  .ws-source span { display: block; color: var(--muted); font-size: .7rem; margin-bottom: 5px; }
+  .ws-source code { font: .65rem/1.8 var(--mono); color: var(--accent); }
+  footer { padding: 20px 28px; color: var(--muted); font-size: .72rem; border-top: 1px solid var(--line); }
+  @media(max-width: 600px) { header, .ws-interaction, footer { padding: 20px 18px; } .ws-exchange { grid-template-columns: 1fr; } .ws-phases { gap: 8px; } .ws-phases li { font-size: .64rem; } pre { min-height: 100px; } }
+</style>

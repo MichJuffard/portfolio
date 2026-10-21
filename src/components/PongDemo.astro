@@ -1,0 +1,138 @@
+<section class="pong" data-pong aria-labelledby="pong-title">
+  <div class="pong-heading"><div><p class="eyebrow">DÉMO JOUABLE / MAP HEXAGONE</p><h3 id="pong-title">À vous de prendre la raquette.</h3></div><span class="pong-score" data-score aria-label="Score : vous 0, adversaire 0">VOUS 0 : 0 ADVERSAIRE</span></div>
+  <p class="pong-help" id="pong-help">Vous jouez à gauche. Flèches ↑ ↓ ou Z / S ; souris ou doigt sur le terrain. Espace : pause. Premier à 5 points.</p>
+  <canvas width="960" height="480" tabindex="0" aria-label="Pong contre un adversaire automatique, deux obstacles hexagonaux et des raquettes classiques" aria-describedby="pong-help pong-status">Votre navigateur ne prend pas en charge le canvas.</canvas>
+  <div class="pong-controls" hidden><button type="button" class="pong-primary" data-play>Jouer →</button><button type="button" data-restart>Recommencer</button><div class="pong-direction" role="group" aria-label="Déplacer votre raquette"><button type="button" data-direction="-1" aria-label="Monter la raquette">↑</button><button type="button" data-direction="1" aria-label="Descendre la raquette">↓</button></div></div>
+  <p id="pong-status" class="pong-status" role="status">Démo locale inspirée du projet : géométrie Hexagone et raquettes classiques, avec un moteur simplifié et un adversaire automatique.</p>
+  <noscript><p class="pong-help">Activez JavaScript pour jouer. Les captures du projet restent disponibles ci-dessous.</p></noscript>
+</section>
+<script>
+  import { createPong, stepPong, hexagonSegments, paddleSegments, RADIUS } from '../lib/pong-demo';
+  const root = document.querySelector<HTMLElement>('[data-pong]');
+  if (root) {
+    const canvas = root.querySelector('canvas')!;
+    const context = canvas.getContext('2d');
+    const play = root.querySelector<HTMLButtonElement>('[data-play]')!;
+    const status = root.querySelector<HTMLElement>('[role=status]')!;
+    const score = root.querySelector<HTMLElement>('[data-score]')!;
+    if (context) {
+      let state = createPong(), running = false, started = false, frame = 0, previous = 0;
+      const keys = new Set<string>();
+      let pointerTarget: number | undefined;
+      let touchDirection = 0;
+      let lastScore = '';
+      const draw = () => {
+        context.fillStyle = '#efede6'; context.fillRect(0, 0, 960, 480);
+        context.save(); context.translate(480, 240); context.scale(24, 24);
+        context.strokeStyle = '#22232a'; context.lineWidth = .14;
+        context.strokeRect(-19.8, -9.8, 39.6, 19.6);
+        const line = (a: {x: number; y: number}, b: {x: number; y: number}) => {
+          context.beginPath(); context.moveTo(a.x, a.y); context.lineTo(b.x, b.y); context.stroke();
+        };
+        hexagonSegments.forEach(s => line(s.a, s.b));
+        context.lineWidth = .24;
+        context.strokeStyle = '#5146a4'; paddleSegments(true, state.player).forEach(s => line(s.a, s.b));
+        context.strokeStyle = '#22232a'; paddleSegments(false, state.opponent).forEach(s => line(s.a, s.b));
+        context.fillStyle = '#22232a'; context.beginPath(); context.arc(state.ball.x, state.ball.y, RADIUS, 0, Math.PI * 2); context.fill();
+        context.restore();
+        const text = `${state.score[0]} : ${state.score[1]}`;
+        score.textContent = `VOUS ${text} ADVERSAIRE`;
+        score.setAttribute('aria-label', `Score : vous ${state.score[0]}, adversaire ${state.score[1]}`);
+        if (text !== lastScore && started && !state.winner) status.textContent = `Score : ${state.score[0]} à ${state.score[1]}.`;
+        lastScore = text;
+        if (!running) {
+          context.fillStyle = '#efede6ec'; context.fillRect(240, 194, 480, 92);
+          context.fillStyle = '#22232a'; context.textAlign = 'center'; context.font = '600 27px Georgia, serif';
+          context.fillText(state.winner ? (state.winner === 'player' ? 'Bien joué !' : 'Partie terminée') : started ? 'Pause' : 'Pong · Hexagone', 480, 237);
+          context.font = '16px sans-serif'; context.fillText(state.winner ? 'Une revanche ?' : 'Jouer avec le bouton ci-dessous', 480, 268);
+        }
+      };
+      const pause = () => {
+        if (!running) return;
+        running = false; cancelAnimationFrame(frame); keys.clear(); touchDirection = 0;
+        pointerTarget = undefined; canvas.classList.remove('playing'); play.textContent = 'Reprendre →';
+        status.textContent = 'Partie en pause.'; draw();
+      };
+      const tick = (now: number) => {
+        if (!running) return;
+        const elapsed = previous ? (now - previous) / 1000 : 0;
+        previous = now;
+        const direction = (keys.has('ArrowDown') || keys.has('s') ? 1 : 0) - (keys.has('ArrowUp') || keys.has('z') ? 1 : 0);
+        stepPong(state, elapsed, direction || touchDirection, pointerTarget);
+        if (state.winner) {
+          running = false; canvas.classList.remove('playing'); play.textContent = 'Rejouer →';
+          status.textContent = `${state.winner === 'player' ? 'Victoire !' : 'L’adversaire remporte la partie.'} Score final : ${state.score[0]} à ${state.score[1]}.`;
+          keys.clear(); touchDirection = 0; pointerTarget = undefined;
+        }
+        draw();
+        if (running) frame = requestAnimationFrame(tick);
+      };
+      const toggle = () => {
+        if (running) { pause(); return; }
+        if (state.winner) state = createPong();
+        running = true; started = true; previous = 0; canvas.classList.add('playing');
+        play.textContent = 'Pause'; status.textContent = 'Partie lancée. Vous contrôlez la raquette de gauche.';
+        canvas.focus({ preventScroll: true }); frame = requestAnimationFrame(tick);
+      };
+      play.addEventListener('click', toggle);
+      root.querySelector('[data-restart]')!.addEventListener('click', () => {
+        pause(); state = createPong(); started = false; lastScore = ''; play.textContent = 'Jouer →'; draw();
+        status.textContent = 'Nouvelle partie prête. Cliquez sur Jouer.';
+      });
+      canvas.addEventListener('keydown', e => {
+        const key = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+        if (['ArrowUp', 'ArrowDown', 'z', 's', ' ', 'Escape'].includes(key)) {
+          e.preventDefault();
+          if (key === ' ' && !e.repeat) toggle();
+          else if (key === 'Escape') pause();
+          else { keys.add(key); pointerTarget = undefined; }
+        }
+      });
+      canvas.addEventListener('keyup', e => keys.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key));
+      const point = (event: PointerEvent) => {
+        const bounds = canvas.getBoundingClientRect();
+        pointerTarget = (event.clientY - bounds.top) / bounds.height * 20 - 10;
+      };
+      canvas.addEventListener('pointerdown', e => { if (running) { canvas.setPointerCapture(e.pointerId); point(e); canvas.focus({preventScroll:true}); } });
+      canvas.addEventListener('pointermove', e => { if (running && (e.pointerType === 'mouse' || canvas.hasPointerCapture(e.pointerId))) point(e); });
+      const clearPointer = () => { pointerTarget = undefined; };
+      canvas.addEventListener('pointerleave', clearPointer);
+      canvas.addEventListener('pointerup', clearPointer);
+      canvas.addEventListener('pointercancel', clearPointer);
+      root.querySelectorAll<HTMLButtonElement>('[data-direction]').forEach(button => {
+        button.addEventListener('pointerdown', e => { button.setPointerCapture(e.pointerId); touchDirection = Number(button.dataset.direction); pointerTarget = undefined; });
+        button.addEventListener('pointerup', () => { touchDirection = 0; });
+        button.addEventListener('pointercancel', () => { touchDirection = 0; });
+        button.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); touchDirection = Number(button.dataset.direction); pointerTarget = undefined; } });
+        button.addEventListener('keyup', () => { touchDirection = 0; });
+        button.addEventListener('blur', () => { touchDirection = 0; });
+      });
+      canvas.addEventListener('blur', () => keys.clear());
+      root.addEventListener('focusout', e => { if (!(e.relatedTarget instanceof Node) || !root.contains(e.relatedTarget)) pause(); });
+      document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+      window.addEventListener('blur', pause);
+      new IntersectionObserver(entries => { if (!entries[0].isIntersecting) pause(); }).observe(root);
+      root.querySelector<HTMLElement>('.pong-controls')!.hidden = false;
+      draw();
+    }
+  }
+</script>
+<style>
+  .pong { margin: 0 28px 28px; padding: 22px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+  .pong-heading { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; }
+  .eyebrow { font-size: .58rem; margin-bottom: 10px; }
+  h3 { font-size: 1.2rem; }
+  .pong-score { font: .65rem var(--mono); color: var(--accent); }
+  .pong-help, .pong-status { color: var(--muted); font-size: .75rem; margin-block: 16px; }
+  canvas { display: block; width: 100%; height: auto; border-radius: 4px; touch-action: pan-y; }
+  canvas.playing { touch-action: none; cursor: crosshair; }
+  canvas:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .pong-controls { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+  [hidden] { display: none !important; }
+  button { font: inherit; font-size: .8rem; cursor: pointer; border: 1px solid var(--line); border-radius: 4px; padding: 10px 15px; color: var(--text); background: var(--surface); }
+  button.pong-primary { background: var(--accent); border-color: var(--accent); color: #17152c; }
+  button.pong-primary:hover { background: #ccc9ff; }
+  .pong-direction { display: flex; gap: 8px; margin-left: auto; }
+  .pong-direction button { min-width: 46px; touch-action: none; user-select: none; }
+  @media(max-width:600px) { .pong { margin-inline: 18px; padding: 14px; } .pong-controls { gap: 8px; } button { padding: 10px; } }
+</style>

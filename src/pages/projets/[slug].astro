@@ -1,0 +1,59 @@
+---
+import { getCollection, render } from 'astro:content';
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import MiniRTDemo from '../../components/MiniRTDemo.astro';
+import WebservDemo from '../../components/WebservDemo.astro';
+import TranscendanceDemo from '../../components/TranscendanceDemo.astro';
+import PingDemo from '../../components/PingDemo.astro';
+import InceptionDemo from '../../components/InceptionDemo.astro';
+import MinishellDemo from '../../components/MinishellDemo.astro';
+import LinearRegressionDemo from '../../components/LinearRegressionDemo.astro';
+import CTFDemo from '../../components/CTFDemo.astro';
+import HomelabMonitoring from '../../components/HomelabMonitoring.astro';
+export async function getStaticPaths() {
+  return (await getCollection('projects')).map(project => ({ params: { slug: project.id }, props: { project } }));
+}
+interface Props { project: CollectionEntry<'projects'> }
+const { project } = Astro.props;
+const { Content, headings } = await render(project);
+const outline = headings.filter(heading => heading.depth === 2);
+---
+<BaseLayout title={project.data.title} description={project.data.summary}>
+  <article class="article">
+    <a class="text-link" href="/projets/">← Retour aux projets</a>
+    <header class="page-intro">
+      <p class="eyebrow">{project.data.category} · ~/projets/{project.id}</p>
+      <h1>{project.data.title}</h1>
+      <p>{project.data.summary}</p>
+      <span class="status">{project.data.status}</span>
+    </header>
+
+    <section class="project-summary" aria-labelledby="project-summary-title">
+      <h2 id="project-summary-title">En bref</h2>
+      <div class="project-summary-grid">
+        {project.data.objective && <div><h3>Objectif du projet</h3><p>{project.data.objective}</p></div>}
+        {project.data.contribution && <div><h3>Ma contribution</h3><p>{project.data.contribution}</p></div>}
+        {project.data.learnings && <div><h3>Compétences et apprentissages</h3><p>{project.data.learnings}</p></div>}
+        {project.data.tags.length > 0 && <div class="summary-technologies"><h3>Technologies principales</h3><ul class="tags">{project.data.tags.map(tag => <li>{tag}</li>)}</ul></div>}
+      </div>
+    </section>
+
+    {outline.length >= 7 && <nav class="project-toc" aria-label="Sommaire de la fiche">
+      <span>Dans cette fiche</span>
+      <ul>{outline.map(heading => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ul>
+    </nav>}
+
+    {project.id === 'homelab' && project.data.monitoringEnabled && <HomelabMonitoring />}
+    {project.id === 'homelab' && !project.data.monitoringEnabled && project.data.monitoringFallback && <section class="monitor-fallback"><h2>Monitoring</h2><p>{project.data.monitoringFallback}</p></section>}
+    {project.id === 'minirt' && <MiniRTDemo />}
+    {project.id === 'webserv' && <WebservDemo />}
+    {project.id === 'transcendance' && <TranscendanceDemo />}
+    {project.id === 'ft-ping' && <PingDemo />}
+    {project.id === 'inception' && <InceptionDemo />}
+    {project.id === 'minishell' && <MinishellDemo />}
+    {project.id === 'linear-regression' && <LinearRegressionDemo />}
+    {project.id === 'ctf' && <CTFDemo />}
+    <div class="prose"><Content /></div>
+  </article>
+</BaseLayout>

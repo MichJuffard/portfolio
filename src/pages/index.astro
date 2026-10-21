@@ -1,0 +1,31 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+const projects = (await getCollection('projects')).filter(p => p.data.featured).sort((a, b) => (a.data.featuredOrder ?? a.data.order) - (b.data.featuredOrder ?? b.data.order));
+---
+<BaseLayout>
+  <section class="hero" aria-labelledby="intro">
+    <div class="hero-copy">
+      <p class="hero-identity"><strong>Michel Juffard</strong><span> — Systèmes, réseaux & cybersécurité</span></p>
+      <h1 id="intro">Construire.<br />Administrer.<br /><span>Superviser.</span></h1>
+      <p class="availability">À la recherche d'une alternance en systèmes, réseaux ou cybersécurité.</p>
+      <p class="hero-description">Après plusieurs années en restauration, j’ai rejoint 42 Lyon en juillet 2023 pour me reconvertir dans l’informatique. J’y développe mes compétences en systèmes, réseaux et cybersécurité par les projets, et je les complète par des expérimentations dans mon homelab.</p>
+      <div class="actions"><a class="button primary" href="/projets/">Explorer mes projets <span aria-hidden="true">↗</span></a><a class="button secondary" href="/contact/">Me contacter <span aria-hidden="true">→</span></a></div>
+    </div>
+    <aside class="terminal" aria-label="Compétences système et projets associés">
+      <div class="terminal-bar"><span class="window-dots" aria-hidden="true">● ● ●</span><span>systèmes / en pratique</span></div>
+      <div class="terminal-body">
+        <div class="skill-row"><h3>Linux & virtualisation</h3><p>Proxmox · Debian · SSH</p><p>Installation et administration du homelab</p></div>
+        <div class="skill-row"><h3>Services & conteneurs</h3><p>Docker Compose · Nginx · volumes</p><p>Inception / infrastructure Transcendance</p></div>
+        <div class="skill-row"><h3>Supervision & observabilité</h3><p>Prometheus · Grafana · Alertmanager</p><p>Ma contribution DevOps sur Transcendance</p></div>
+      </div>
+    </aside>
+  </section>
+  <div class="topic-strip" aria-label="Domaines de compétences"><span class="mono muted">DE LA CONFIGURATION À L’OBSERVATION</span><span>Linux</span><span>Conteneurs</span><span>Réseau</span><span>Supervision</span></div>
+  <section class="section" aria-labelledby="projects-title">
+    <div class="section-heading"><div><p class="eyebrow">01 / RÉALISATIONS SÉLECTIONNÉES</p><h2 id="projects-title">De l’application à l’infrastructure.</h2></div><a class="text-link" href="/projets/">Tous les projets <span aria-hidden="true">→</span></a></div>
+    <div class="project-grid">{projects.map(project => <ProjectCard project={project} featured />)}</div>
+  </section>
+  <section class="approach section" aria-labelledby="approach-title"><div><p class="eyebrow">02 / MES FONDATIONS</p><h2 id="approach-title">Comprendre le logiciel<br />pour administrer les systèmes.</h2><a class="text-link" href="/a-propos/">Mon parcours et mes compétences <span aria-hidden="true">→</span></a></div><div class="approach-text"><p>Mon parcours en C et C++ m’a appris à raisonner sur les processus, la mémoire et les échanges réseau. Minishell, Webserv et ft_ping donnent une base concrète à cette compréhension.</p><p>Les CTF complètent ce regard par l’analyse des programmes et des faiblesses de sécurité. Philosophers et Push_swap ont aussi enrichi mes bases en concurrence et en algorithmique.</p></div></section>
+</BaseLayout>

@@ -1,0 +1,153 @@
+---
+import minirtPreview from '../assets/minirt-preview.png';
+---
+<section class="rt-demo" aria-labelledby="rt-title" data-minirt>
+  <div class="rt-heading"><div><p class="eyebrow">DANS LES COULISSES D’UN PIXEL</p><h2 id="rt-title">Trophy · de la géométrie à l’image.</h2></div><span class="rt-badge">Démo interactive</span></div>
+  <p class="rt-intro">Déplacez les lumières et observez comment les volumes et les ombres se dessinent.</p>
+  <figure>
+    <div class="rt-viewport">
+      <img src={minirtPreview.src} width="960" height="540" alt="Un trophée doré avec deux anses sur un socle, éclairé de part et d’autre par des lumières colorées." />
+      <canvas width="640" height="360" role="img" aria-label="Scène de ray tracing mise à jour selon les réglages de lumière, d’ombres et de brillance" hidden></canvas>
+      <span class="rt-overlay" aria-hidden="true">TROPHY / PARABOLOÏDE + CYLINDRES + ELLIPSOÏDE</span>
+    </div>
+    <figcaption>Interprétation de la scène trophy.rt du projet, avec cadrage et éclairage adaptés au web. Le programme C original reste indépendant.</figcaption>
+  </figure>
+  <div class="rt-launch"><button class="button primary" type="button" data-start hidden>Explorer le trophée <span aria-hidden="true">↗</span></button><p data-status role="status"></p></div>
+  <fieldset hidden>
+    <legend>Explorer le rendu</legend>
+    <div class="rt-controls">
+      <label class="rt-slider" for="rt-light">Position des lumières <span><span aria-hidden="true">Gauche</span><input type="range" id="rt-light" min="-6" max="6" step="0.25" value="-3" /><span aria-hidden="true">Droite</span></span></label>
+      <label><input type="checkbox" name="shadows" checked /> Ombres portées</label>
+      <label><input type="checkbox" name="specular" checked /> Brillance</label>
+      <label><input type="checkbox" name="checker" /> Damier</label>
+      <button type="button" class="rt-reset">Réinitialiser</button>
+    </div>
+  </fieldset>
+  <noscript><p class="rt-intro">Activez JavaScript pour manipuler cette scène. L’aperçu reste visible ci-dessus.</p></noscript>
+  <ol class="rt-steps"><li><span>01</span><strong>Lancer un rayon</strong><p>Chaque pixel définit une direction depuis la caméra.</p></li><li><span>02</span><strong>Trouver la surface</strong><p>L’intersection la plus proche détermine l’objet visible.</p></li><li><span>03</span><strong>Calculer la lumière</strong><p>La normale, la lumière et les obstacles donnent sa couleur au pixel.</p></li></ol>
+</section>
+<script>
+  import { defaults, type RenderOptions } from '../lib/minirt-demo';
+  const root = document.querySelector<HTMLElement>('[data-minirt]');
+  if (root) {
+    const canvas = root.querySelector<HTMLCanvasElement>('canvas')!;
+    const image = root.querySelector<HTMLImageElement>('img')!;
+    const start = root.querySelector<HTMLButtonElement>('[data-start]')!;
+    const fieldset = root.querySelector<HTMLFieldSetElement>('fieldset')!;
+    const light = root.querySelector<HTMLInputElement>('#rt-light')!;
+    const shadows = root.querySelector<HTMLInputElement>('[name=shadows]')!;
+    const specular = root.querySelector<HTMLInputElement>('[name=specular]')!;
+    const checker = root.querySelector<HTMLInputElement>('[name=checker]')!;
+    const status = root.querySelector<HTMLElement>('[data-status]')!;
+    const context = canvas.getContext('2d');
+    if (context && 'Worker' in window) {
+      let worker: Worker | undefined;
+      let busy = false;
+      let id = 0;
+      let pending: { id: number; width: number; height: number; options: RenderOptions } | undefined;
+      const pump = () => {
+        if (!busy && pending && worker) {
+          busy = true;
+          worker.postMessage(pending);
+          pending = undefined;
+        }
+      };
+      const render = (preview = false) => {
+        pending = { id: ++id, width: preview ? 320 : 640, height: preview ? 180 : 360,
+          options: { light: Number(light.value), shadows: shadows.checked,
+            specular: specular.checked, checker: checker.checked } };
+        pump();
+      };
+      const fallback = () => {
+        worker?.terminate();
+        worker = undefined;
+        pending = undefined;
+        image.hidden = false;
+        canvas.hidden = true;
+        fieldset.hidden = true;
+        start.hidden = true;
+        status.textContent = 'L’aperçu reste disponible. Le rendu interactif n’a pas pu démarrer dans ce navigateur.';
+      };
+      start.hidden = false;
+      start.addEventListener('click', () => {
+        try {
+          worker = new Worker(new URL('../lib/minirt.worker.ts', import.meta.url), { type: 'module' });
+          worker.addEventListener('message', (event: MessageEvent<{ id: number; width: number; height: number; pixels: Uint8ClampedArray }>) => {
+            busy = false;
+            if (event.data.id === id) {
+              canvas.width = event.data.width;
+              canvas.height = event.data.height;
+              const buffer = context.createImageData(canvas.width, canvas.height);
+              buffer.data.set(event.data.pixels);
+              context.putImageData(buffer, 0, 0);
+              image.hidden = true;
+              canvas.hidden = false;
+              status.textContent = 'Déplacez les lumières ou comparez les effets sur le trophée.';
+            }
+            pump();
+          });
+          worker.addEventListener('error', fallback);
+          worker.addEventListener('messageerror', fallback);
+          start.hidden = true;
+          fieldset.hidden = false;
+          status.textContent = 'Calcul de la scène…';
+          render();
+          light.focus();
+        } catch { fallback(); }
+      });
+      // Coalesce slider updates: only the most recent pending view is calculated.
+      light.addEventListener('input', () => render(true));
+      fieldset.addEventListener('change', () => render());
+      root.querySelector('.rt-reset')!.addEventListener('click', () => {
+        light.value = String(defaults.light);
+        shadows.checked = defaults.shadows;
+        specular.checked = defaults.specular;
+        checker.checked = defaults.checker;
+        render();
+      });
+      window.addEventListener('pagehide', () => worker?.terminate(), { once: true });
+    }
+  }
+</script>
+<style>
+  .rt-demo { margin-block: 8px 56px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  .rt-heading { display: flex; justify-content: space-between; align-items: start; gap: 16px; padding: 28px 28px 0; }
+  .rt-heading .eyebrow { font-size: .6rem; margin-bottom: 12px; }
+  .rt-heading h2 { font-size: clamp(1.35rem, 3vw, 1.8rem); }
+  .rt-badge { border: 1px solid var(--line); border-radius: 20px; color: var(--accent); padding: 5px 10px; font-size: .65rem; white-space: nowrap; }
+  .rt-intro { margin: 14px 28px 24px; font-size: .85rem; color: var(--muted); }
+  figure { margin: 0; }
+  .rt-viewport { position: relative; background: #11131b; aspect-ratio: 16 / 9; }
+  img, canvas { width: 100%; height: auto; display: block; }
+  [hidden] { display: none !important; }
+  .rt-overlay { position: absolute; top: 18px; left: 20px; font: .55rem var(--mono); letter-spacing: .1em; color: #f0f1f7; }
+  figcaption { color: var(--muted); font-size: .72rem; padding: 14px 28px 0; }
+  .rt-launch { padding: 20px 28px 0; }
+  [data-status] { font-size: .78rem; color: var(--muted); }
+  button, input { font: inherit; }
+  button { cursor: pointer; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
+  .button { border: 0; }
+  fieldset { margin: 22px 28px 0; padding: 0; border: 0; min-width: 0; }
+  legend { font-size: .78rem; color: var(--text); margin-bottom: 12px; }
+  .rt-controls { display: flex; flex-wrap: wrap; gap: 18px 22px; font-size: .78rem; color: var(--muted); align-items: center; }
+  .rt-controls label { display: flex; align-items: center; gap: 8px; }
+  .rt-controls .rt-slider { width: 100%; display: block; }
+  .rt-slider > span { display: flex; align-items: center; gap: 16px; margin-top: 8px; font-size: .7rem; }
+  input { accent-color: var(--accent); }
+  input[type=range] { flex: 1; width: 100%; min-width: 0; min-height: 30px; }
+  input[type=checkbox] { width: 17px; height: 17px; }
+  .rt-reset { background: transparent; color: var(--text); border: 1px solid var(--line); border-radius: 4px; padding: 8px 12px; }
+  .rt-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin: 26px 28px 28px; padding: 24px 0 0; border-top: 1px solid var(--line); list-style: none; }
+  .rt-steps span { display: block; color: var(--accent); font: .65rem var(--mono); margin-bottom: 10px; }
+  .rt-steps strong { display: block; font-size: .82rem; font-weight: 500; margin-bottom: 8px; }
+  .rt-steps p { font-size: .75rem; color: var(--muted); }
+  @media (max-width: 600px) {
+    .rt-heading { flex-direction: column; padding-inline: 18px; }
+    .rt-intro { margin-inline: 18px; }
+    figcaption, .rt-launch { padding-inline: 18px; }
+    fieldset { margin-inline: 18px; }
+    .rt-steps { grid-template-columns: 1fr; gap: 18px; margin-inline: 18px; }
+    .rt-overlay { font-size: .42rem; left: 12px; top: 12px; }
+  }
+</style>

@@ -1,0 +1,41 @@
+---
+import { Image } from 'astro:assets';
+import transcendencePreview from '../assets/transcendance/game.png';
+import type { CollectionEntry } from 'astro:content';
+import minirtPreview from '../assets/minirt-preview.png';
+import webservPreview from '../assets/webserv-flow.svg';
+import pingPreview from '../assets/ping-flow.svg';
+import inceptionPreview from '../assets/inception-stack.svg';
+import minishellPreview from '../assets/minishell-tree.svg';
+import regressionPreview from '../assets/linear-regression.svg';
+import ctfPreview from '../assets/ctf-memory.svg';
+import homelabPreview from '../assets/homelab-stack.svg';
+import monitoringPreview from '../assets/transcendance/monitoring.png';
+interface Props { project: CollectionEntry<'projects'>; featured?: boolean }
+const { project, featured = false } = Astro.props;
+const { status, category } = project.data;
+const title = (featured && project.data.featuredTitle) || project.data.title;
+const summary = (featured && project.data.featuredSummary) || project.data.summary;
+const tags = (featured && project.data.featuredTags) || project.data.tags;
+const projectPreviews = {
+  minirt: { image: minirtPreview.src, alt: 'Trophy : un trophée doré avec ses anses et des ombres colorées.', action: 'Explorer la lumière →', width: 960, height: 540 },
+  webserv: { image: webservPreview.src, alt: 'Une requête passe du navigateur au serveur C++ et à une ressource, puis revient sous forme de réponse HTTP.', action: 'Suivre une requête →', width: 960, height: 540 },
+  'ft-ping': { image: pingPreview.src, alt: 'Schéma ICMP : Echo Request, Echo Reply et mesure de l’aller-retour.', action: 'Comprendre un paquet ICMP →', width: 960, height: 540 },
+  inception: { image: inceptionPreview.src, alt: 'Infrastructure Inception : Nginx, WordPress et MariaDB, services complémentaires et volumes persistants.', action: 'Explorer les conteneurs →', width: 960, height: 540 },
+  minishell: { image: minishellPreview.src, alt: 'Arbre binaire Minishell : parcours des opérateurs && et || selon les statuts de retour.', action: 'Suivre l’exécution →', width: 960, height: 540 },
+  'linear-regression': { image: regressionPreview.src, alt: 'Régression linéaire sur les données du projet : nuage kilométrage-prix et droite ajustée.', action: 'Explorer l’apprentissage →', width: 720, height: 420 },
+  ctf: { image: ctfPreview.src, alt: 'Parcours Snowcrash, Rainfall et Override ; une copie de 9 octets dépasse un buffer de 8 octets et modifie une donnée voisine.', action: 'Explorer le parcours sécurité →', width: 960, height: 540 },
+  homelab: { image: homelabPreview.src, alt: 'Homelab personnel : Proxmox héberge une VM Debian administrée en SSH.', action: 'Architecture & supervision →', width: 960, height: 540 },
+} as const;
+const preview = projectPreviews[project.id as keyof typeof projectPreviews];
+const transcendenceAlt = featured ? 'Capture Grafana du projet : métriques des services et connexions Nginx.' : 'Capture originale de Transcendance : une partie de Pong avec raquettes en V et obstacles.';
+const transcendenceAction = featured ? 'Supervision & architecture →' : 'Découvrir la plateforme →';
+---
+<a class="project-card" href={`/projets/${project.id}/`} data-project-card data-category={category}>
+  <div class="card-top"><span class="mono muted">{category}</span><span class="status">{status}</span></div>
+  {preview && <div class="project-preview"><img src={preview.image} width={preview.width} height={preview.height} loading="lazy" alt={preview.alt} /><span>{preview.action}</span></div>}
+  {project.id === 'transcendance' && <div class="project-preview"><Image src={featured ? monitoringPreview : transcendencePreview} width={640} format="webp" loading="lazy" alt={transcendenceAlt} /><span>{transcendenceAction}</span></div>}
+  <h3>{title}<span aria-hidden="true">↗</span></h3>
+  <p>{summary}</p>
+  <ul class="tags" aria-label="Technologies">{tags.map(tag => <li>{tag}</li>)}</ul>
+</a>

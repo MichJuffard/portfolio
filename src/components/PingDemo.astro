@@ -1,0 +1,95 @@
+---
+import flow from '../assets/ping-flow.svg';
+const fields = [
+  { id: 'type', title: 'Type', size: '8 bits', value: '8', detail: 'Le type identifie le message ICMP : 8 pour une demande Echo Request et 0 pour une réponse Echo Reply, dans cet échange IPv4.' },
+  { id: 'code', title: 'Code', size: '8 bits', value: '0', detail: 'Le code précise le sens du type ICMP. Pour une demande ou une réponse Echo, sa valeur est 0.' },
+  { id: 'checksum', title: 'Checksum', size: '16 bits', value: 'Σ', detail: 'Une somme de contrôle est calculée sur l’en-tête et les données ICMP : somme des mots de 16 bits avec report, puis complément à un. Elle permet de détecter des altérations du message.' },
+  { id: 'id', title: 'Identifiant', size: '16 bits', value: '0x0042', detail: 'L’identifiant aide à reconnaître les réponses correspondant à une instance de ping. Le code utilise le PID comme base. La valeur 0x0042 affichée ici est un exemple.' },
+  { id: 'seq', title: 'Séquence', size: '16 bits', value: '1', detail: 'Le numéro de séquence distingue les requêtes successives. Avec l’identifiant, il permet de rapprocher une réponse de la requête correspondante et de son heure d’envoi.' },
+];
+---
+<section class="ping-demo" data-ping aria-labelledby="ping-title">
+  <header><p class="eyebrow">ICMP / DU PAQUET AU DIAGNOSTIC</p><h2 id="ping-title">Que mesure vraiment un ping ?</h2><p>Une requête, une réponse et un temps d’aller-retour. Explorez la logique derrière l’outil.</p></header>
+  <img src={flow.src} width="960" height="540" alt="Un client envoie un Echo Request ICMP de type 8 à une cible ; un Echo Reply de type 0 revient au client. L’aller-retour permet de mesurer le RTT." />
+  <div class="ping-interactive" hidden>
+    <label for="ping-scenario">Cas à explorer <select id="ping-scenario"><option value="reply">La cible répond</option><option value="timeout">Aucune réponse avant le délai</option></select></label>
+    <ol class="ping-stages" aria-label="Étapes de l’échange"><li aria-current="step">01 · Préparer</li><li>02 · Envoyer</li><li>03 · Observer</li></ol>
+    <div class="ping-event" role="status" aria-atomic="true"><h3 data-event-title>Préparer un Echo Request</h3><p data-event-detail>Le client construit un message ICMP avec un identifiant et un numéro de séquence, puis calcule son checksum.</p><span data-rtt>RTT : en attente</span></div>
+    <button class="ping-next" type="button" data-next>Simuler l’envoi →</button>
+    <h3 class="ping-packet-title">Dans l’en-tête ICMP</h3>
+    <div class="ping-fields" role="group" aria-label="Explorer un champ de l’en-tête">{fields.map((field, i) => <button type="button" data-field={field.id} aria-pressed={i === 0}><span>{field.title}</span><strong data-value={field.id}>{field.value}</strong><small>{field.size}</small></button>)}</div>
+    <div class="ping-field-detail" aria-live="polite"><strong data-field-title>{fields[0].title}</strong><p data-field-detail>{fields[0].detail}</p></div>
+    <p class="ping-payload">8 octets d’en-tête + données du message. L’identifiant et la séquence sont encodés en ordre réseau.</p>
+  </div>
+  <footer>Simulation pédagogique : aucun paquet réseau n’est envoyé. Les valeurs sont illustratives et ne sont pas des résultats du programme C, encore en cours de développement.</footer>
+</section>
+<script define:vars={{ fields }}>
+  // Small standalone DOM explorer; it never opens a network connection.
+  {
+    const root = document.querySelector('[data-ping]');
+    if (root) {
+      const select = root.querySelector('select');
+      const next = root.querySelector('[data-next]');
+      const stages = Array.from(root.querySelectorAll('.ping-stages li'));
+      const fieldButtons = Array.from(root.querySelectorAll('[data-field]'));
+      let step = 0;
+      const update = () => {
+        const replied = step === 2 && select.value === 'reply';
+        stages.forEach((stage, i) => { if (i === step) stage.setAttribute('aria-current', 'step'); else stage.removeAttribute('aria-current'); });
+        const titles = ['Préparer un Echo Request', 'Echo Request envoyé · type 8', replied ? 'Echo Reply reçu · type 0' : 'Délai dépassé : aucune réponse reçue'];
+        const descriptions = ['Le client construit un message ICMP avec un identifiant et un numéro de séquence, puis calcule son checksum.',
+          'La requête part vers la cible. Le client conserve la séquence et l’heure d’envoi pour identifier la réponse et mesurer l’aller-retour.',
+          replied ? 'La réponse reprend l’identifiant et la séquence de la requête. Le client peut alors calculer le RTT à partir des instants d’envoi et de réception.' : 'Le délai d’attente expire. Cela ne prouve pas que la cible est arrêtée : un filtrage ICMP ou une perte sur le trajet peut également empêcher la réception.'];
+        root.querySelector('[data-event-title]').textContent = titles[step];
+        root.querySelector('[data-event-detail]').textContent = descriptions[step];
+        root.querySelector('[data-rtt]').textContent = step < 2 ? 'RTT : en attente' : replied ? 'RTT illustratif : 24 ms' : 'RTT : non mesurable sans réponse';
+        root.querySelector('[data-value=type]').textContent = replied ? '0' : '8';
+        next.textContent = step === 0 ? 'Simuler l’envoi →' : step === 1 ? 'Observer le résultat →' : 'Recommencer ↺';
+      };
+      next.addEventListener('click', () => { step = (step + 1) % 3; update(); });
+      select.addEventListener('change', () => { step = 0; update(); });
+      fieldButtons.forEach(button => button.addEventListener('click', () => {
+        const field = fields.find(f => f.id === button.dataset.field);
+        fieldButtons.forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+        root.querySelector('[data-field-title]').textContent = field.title;
+        root.querySelector('[data-field-detail]').textContent = field.detail;
+      }));
+      root.querySelector('.ping-interactive').hidden = false;
+    }
+  }
+</script>
+<style>
+  .ping-demo { margin: 8px 0 56px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+  header { padding: 28px; }
+  .eyebrow { font-size: .6rem; margin-bottom: 12px; }
+  h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); }
+  header > p:last-child { font-size: .85rem; color: var(--muted); margin-top: 14px; }
+  img { display: block; width: 100%; height: auto; }
+  [hidden] { display: none !important; }
+  .ping-interactive { padding: 26px 28px; }
+  label { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; font-size: .82rem; }
+  select, button { font: inherit; border: 1px solid var(--line); border-radius: 5px; padding: 10px 12px; background: var(--bg); color: var(--text); font-size: .76rem; max-width: 100%; }
+  button { cursor: pointer; }
+  select:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .ping-stages { list-style: none; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 0; margin: 26px 0; font-size: .72rem; color: var(--muted); }
+  .ping-stages li { border-top: 2px solid var(--line); padding-top: 12px; }
+  .ping-stages [aria-current] { color: var(--text); border-color: var(--accent); }
+  h3 { font-size: 1rem; letter-spacing: -.015em; }
+  .ping-event { padding: 20px; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; margin-bottom: 18px; }
+  .ping-event p, .ping-field-detail p { font-size: .82rem; color: var(--muted); margin-top: 12px; }
+  [data-rtt] { display: block; font: .7rem var(--mono); color: var(--accent); margin-top: 18px; }
+  .ping-next { background: var(--accent); border-color: var(--accent); color: #17152c; }
+  .ping-next:hover { background: #ccc9ff; }
+  .ping-packet-title { margin-block: 32px 16px; }
+  .ping-fields { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .ping-fields button { padding: 14px 6px; }
+  .ping-fields button[aria-pressed=true] { border-color: var(--accent); background: #292841; }
+  .ping-fields span, .ping-fields strong, .ping-fields small { display: block; }
+  .ping-fields strong { font: 1rem var(--mono); color: var(--accent); margin-block: 10px; }
+  .ping-fields small { color: var(--muted); font-size: .65rem; }
+  .ping-field-detail { margin-top: 18px; border-left: 2px solid var(--accent); padding-left: 16px; }
+  .ping-field-detail > strong { font-size: .85rem; }
+  .ping-payload { font-size: .72rem; color: var(--muted); margin-top: 20px; }
+  footer { padding: 20px 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: .72rem; }
+  @media(max-width:600px) { header, .ping-interactive, footer { padding: 20px 18px; } .ping-fields { grid-template-columns: repeat(3, 1fr); } .ping-stages { font-size: .65rem; gap: 8px; } }
+</style>

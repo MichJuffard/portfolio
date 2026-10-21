@@ -1,0 +1,89 @@
+---
+import { Image } from 'astro:assets';
+import PongDemo from './PongDemo.astro';
+import game from '../assets/transcendance/game.png';
+import options from '../assets/transcendance/options.png';
+import monitoring from '../assets/transcendance/monitoring.png';
+import { platformServices } from '../data/transcendance';
+const views = [
+  { image: game, title: 'Partie de Pong', alt: 'Capture de Transcendance : terrain de Pong, raquettes en V et obstacles en losange dans une interface de journal.', caption: 'Le jeu en temps réel : terrain, obstacles, raquettes et vies des joueurs.' },
+  { image: options, title: 'Options de jeu', alt: 'Capture des options de partie : choix de la forme des raquettes et des obstacles.', caption: 'La création de partie permet de choisir les raquettes et les obstacles.' },
+  { image: monitoring, title: 'Supervision', alt: 'Capture Grafana avec graphiques de requêtes par service et connexions Nginx.', caption: 'Le tableau de bord Grafana suit les requêtes et connexions. Capture enregistrée, sans métriques en direct.' },
+];
+const initial = platformServices[0];
+---
+<section class="tc-demo" data-transcendance aria-labelledby="tc-title">
+  <header><p class="eyebrow">UNE APPLICATION, PLUSIEURS SERVICES</p><h2 id="tc-title">Du terrain de jeu à l’infrastructure.</h2><p>Une plateforme de Pong multijoueur, avec une interface qui emprunte les codes d’un journal.</p></header>
+  <aside class="tc-contributions" aria-label="Mes contributions au projet"><span>MES CONTRIBUTIONS</span><ul><li>Authentification</li><li>Backend des tournois</li><li>DevOps & monitoring</li></ul></aside>
+  <PongDemo />
+  <div class="tc-gallery-controls" role="group" aria-label="Choisir une capture de l’application" hidden>{views.map((view, i) => <button type="button" data-view={i} aria-pressed={i === 0}>{view.title}</button>)}</div>
+  {views.map((view, i) => <figure data-figure={i} hidden={i !== 0}>
+    <a href={view.image.src} target="_blank" rel="noopener noreferrer" aria-label={`${view.title} — ouvrir la capture en grand dans un nouvel onglet`}><Image src={view.image} width={1280} format="webp" alt={view.alt} loading={i === 0 ? "eager" : "lazy"} /></a>
+    <figcaption>{view.caption} <a href={view.image.src} target="_blank" rel="noopener noreferrer">Agrandir ↗</a></figcaption>
+  </figure>)}
+  <div class="tc-architecture">
+    <h3>Derrière l’écran</h3><p>Un point d’entrée Nginx distribue les échanges vers les services de la plateforme.</p>
+    <div class="tc-entry"><span>Navigateur</span><span aria-hidden="true">↔</span><strong>Nginx</strong><span aria-hidden="true">↔</span><span>Services & données</span></div>
+    <div class="tc-service-controls" role="group" aria-label="Explorer un service" hidden>{platformServices.map((service, i) => <button type="button" data-service={service.id} aria-pressed={i === 0}>{service.title}</button>)}</div>
+    <div class="tc-service" aria-live="polite" aria-atomic="true"><p class="tc-stack" data-stack>{initial.stack}</p><h4 data-title>{initial.title}</h4><p data-description>{initial.description}</p><p class="tc-flow" data-flow>{initial.flow}</p><p data-detail>{initial.detail}</p></div>
+    <noscript><p>La plateforme comprend les services Game, Auth, 2FA, Users et Social, ainsi qu’une pile Prometheus, Grafana et Alertmanager.</p></noscript>
+  </div>
+  <footer>Captures originales présentes dans le dépôt du projet. L’explorateur décrit l’architecture ; il ne lance pas la plateforme.</footer>
+</section>
+<script>
+  import { platformServices } from '../data/transcendance';
+  const root = document.querySelector<HTMLElement>('[data-transcendance]');
+  if (root) {
+    const views = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-view]'));
+    const figures = Array.from(root.querySelectorAll<HTMLElement>('[data-figure]'));
+    views.forEach(button => button.addEventListener('click', () => {
+      views.forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+      figures.forEach(figure => { figure.hidden = figure.dataset.figure !== button.dataset.view; });
+    }));
+    const services = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-service]'));
+    services.forEach(button => button.addEventListener('click', () => {
+      const service = platformServices.find(s => s.id === button.dataset.service);
+      if (!service) return;
+      services.forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+      root.querySelector('[data-stack]')!.textContent = service.stack;
+      root.querySelector('[data-title]')!.textContent = service.title;
+      root.querySelector('[data-description]')!.textContent = service.description;
+      root.querySelector('[data-flow]')!.textContent = service.flow;
+      root.querySelector('[data-detail]')!.textContent = service.detail;
+    }));
+    root.querySelector<HTMLElement>('.tc-gallery-controls')!.hidden = false;
+    root.querySelector<HTMLElement>('.tc-service-controls')!.hidden = false;
+  }
+</script>
+<style>
+  .tc-demo { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); margin: 8px 0 56px; }
+  header { padding: 28px; }
+  header .eyebrow { font-size: .6rem; margin-bottom: 12px; }
+  h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); }
+  header > p:last-child, .tc-architecture > p { color: var(--muted); margin-top: 14px; font-size: .85rem; }
+  [hidden] { display: none !important; }
+  .tc-contributions { margin: 0 28px 26px; padding: 18px; border: 1px solid var(--line); border-left: 2px solid var(--accent); border-radius: 4px; }
+  .tc-contributions > span { color: var(--accent); font: .6rem var(--mono); letter-spacing: .08em; }
+  .tc-contributions ul { display: flex; flex-wrap: wrap; gap: 10px 22px; list-style: none; padding: 0; margin: 12px 0 0; font-size: .8rem; }
+  .tc-gallery-controls, .tc-service-controls { display: flex; flex-wrap: wrap; gap: 10px; }
+  .tc-gallery-controls { padding: 0 28px 22px; }
+  button { cursor: pointer; font: inherit; font-size: .76rem; border: 1px solid var(--line); border-radius: 5px; padding: 10px 14px; background: var(--bg); color: var(--text); }
+  button[aria-pressed=true] { background: var(--accent); color: #17152c; border-color: var(--accent); }
+  button:hover { border-color: var(--accent); }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  figure { margin: 0; }
+  figure img { display: block; width: 100%; height: auto; }
+  figcaption { padding: 16px 28px; color: var(--muted); font-size: .75rem; }
+  figcaption a { color: var(--accent); white-space: nowrap; margin-left: 8px; }
+  .tc-architecture { padding: 28px; border-top: 1px solid var(--line); }
+  .tc-architecture h3 { font-size: 1.3rem; }
+  .tc-entry { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; margin-block: 26px; font: .75rem var(--mono); }
+  .tc-entry strong { padding: 12px 24px; border: 1px solid var(--accent); border-radius: 5px; color: var(--accent); }
+  .tc-service { margin-top: 22px; padding: 22px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
+  .tc-service h4 { font-size: 1.1rem; margin: 12px 0; }
+  .tc-service p { color: var(--muted); font-size: .83rem; }
+  .tc-service .tc-stack { font: .65rem/1.8 var(--mono); color: var(--accent); }
+  .tc-service .tc-flow { margin-block: 20px; border-left: 2px solid var(--accent); padding-left: 12px; font: .7rem/1.8 var(--mono); color: var(--text); overflow-wrap: anywhere; }
+  footer { padding: 20px 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: .72rem; }
+  @media(max-width: 600px) { header, .tc-architecture, footer { padding: 20px 18px; } .tc-gallery-controls { padding-inline: 18px; } figcaption { padding: 14px 18px; } .tc-entry { font-size: .62rem; gap: 8px; } .tc-entry strong { padding: 10px; } .tc-service { padding: 16px; } }
+</style>

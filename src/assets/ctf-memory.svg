@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" fill="none"><defs><linearGradient id="bg" x2="960" y2="540" gradientUnits="userSpaceOnUse"><stop stop-color="#22283d"/><stop offset="1" stop-color="#121520"/></linearGradient></defs><rect width="960" height="540" fill="url(#bg)"/>
+<g font-family="monospace"><text x="44" y="55" fill="#b5b0ff" font-size="13" letter-spacing="3">CTF / COMPRENDRE CE QUI SE PASSE EN MÉMOIRE</text>
+<path d="M278 161h48m-10-8 10 8-10 8m298-8h48m-10-8 10 8-10 8" stroke="#6b7292" stroke-width="2"/>
+<g fill="#1b2030" stroke="#4e5673"><rect x="44" y="103" width="234" height="111" rx="8"/><rect x="326" y="103" width="298" height="111" rx="8"/><rect x="672" y="103" width="244" height="111" rx="8"/></g>
+<g fill="#f0f1f7" font-size="23"><text x="67" y="147">Snowcrash</text><text x="350" y="147">Rainfall</text><text x="695" y="147">Override</text></g>
+<g fill="#b0b6ca" font-size="13"><text x="67" y="181">Linux &amp; investigation</text><text x="350" y="181">Binaires · pile · tas</text><text x="695" y="181">Mémoire &amp; limites</text></g>
+<text x="44" y="277" fill="#b5b0ff" font-size="14">UN BUFFER DE 8 OCTETS. UNE ENTRÉE DE 9 OCTETS.</text>
+<g fill="#292841" stroke="#b5b0ff"><rect x="44" y="306" width="58" height="68" rx="5"/><rect x="112" y="306" width="58" height="68" rx="5"/><rect x="180" y="306" width="58" height="68" rx="5"/><rect x="248" y="306" width="58" height="68" rx="5"/><rect x="316" y="306" width="58" height="68" rx="5"/><rect x="384" y="306" width="58" height="68" rx="5"/><rect x="452" y="306" width="58" height="68" rx="5"/><rect x="520" y="306" width="58" height="68" rx="5"/></g>
+<rect x="612" y="306" width="68" height="68" rx="5" fill="#49322c" stroke="#e5ae81" stroke-width="2"/><rect x="696" y="306" width="220" height="68" rx="5" fill="#1b2030" stroke="#4e5673"/>
+<g fill="#e7e5ff" font-size="22" text-anchor="middle"><text x="73" y="348">A</text><text x="141" y="348">A</text><text x="209" y="348">A</text><text x="277" y="348">A</text><text x="345" y="348">A</text><text x="413" y="348">A</text><text x="481" y="348">A</text><text x="549" y="348">A</text><text x="646" y="348" fill="#ffd5b4">A</text></g>
+<text x="741" y="347" fill="#b0b6ca" font-size="14">Donnée voisine</text><path d="M44 391v13h534v-13m34 0v13h304v-13" stroke="#6b7292"/>
+<text x="178" y="438" fill="#b5b0ff" font-size="14">ZONE ALLOUÉE</text><text x="625" y="438" fill="#e5ae81" font-size="14">1 OCTET HORS LIMITES</text>
+<text x="44" y="504" fill="#8990ac" font-size="12">ILLUSTRATION SIMPLIFIÉE · PILE / TAS · AUCUN BINAIRE EXÉCUTÉ</text></g></svg>

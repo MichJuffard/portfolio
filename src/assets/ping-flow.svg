@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" fill="none">
+<defs><linearGradient id="background" x2="960" y2="540" gradientUnits="userSpaceOnUse"><stop stop-color="#22283d"/><stop offset="1" stop-color="#121520"/></linearGradient></defs>
+<rect width="960" height="540" fill="url(#background)"/>
+<g font-family="monospace"><text x="44" y="55" fill="#b5b0ff" font-size="13" letter-spacing="3">FT_PING / COMPRENDRE L’ALLER-RETOUR</text>
+<rect x="60" y="152" width="205" height="170" rx="12" fill="#1b2030" stroke="#565d7b"/><rect x="95" y="185" width="135" height="65" rx="4" stroke="#b5b0ff" stroke-width="3"/><path d="M140 250v14m-25 0h85m-88-57 10 10-10 10m20 0h17" stroke="#b5b0ff" stroke-width="3"/><text x="102" y="299" fill="#f0f1f7" font-size="18">CLIENT C</text>
+<rect x="695" y="152" width="205" height="170" rx="12" fill="#1b2534" stroke="#84c7eb"/><rect x="741" y="181" width="114" height="31" rx="4" stroke="#84c7eb" stroke-width="2"/><rect x="741" y="224" width="114" height="31" rx="4" stroke="#84c7eb" stroke-width="2"/><circle cx="837" cy="197" r="3" fill="#84c7eb"/><circle cx="837" cy="240" r="3" fill="#84c7eb"/><text x="758" y="299" fill="#f0f1f7" font-size="18">CIBLE</text>
+<path d="M289 199h378m-12-8 12 8-12 8" stroke="#b5b0ff" stroke-width="3"/><text x="349" y="178" fill="#b5b0ff" font-size="16">Echo Request · type 8</text>
+<path d="M667 271H289m12-8-12 8 12 8" stroke="#84c7eb" stroke-width="3"/><text x="355" y="250" fill="#84c7eb" font-size="16">Echo Reply · type 0</text>
+<path d="M283 342h390" stroke="#4c536d" stroke-dasharray="5 6"/><text x="348" y="369" fill="#b0b6ca" font-size="13">RTT = durée de l’aller-retour</text>
+<g stroke="#4c536d" fill="#1b2030"><rect x="60" y="410" width="105" height="55" rx="4"/><rect x="175" y="410" width="105" height="55" rx="4"/><rect x="290" y="410" width="195" height="55" rx="4"/><rect x="495" y="410" width="195" height="55" rx="4"/><rect x="700" y="410" width="200" height="55" rx="4"/></g>
+<g fill="#f0f1f7" font-size="14" text-anchor="middle"><text x="112" y="443">Type</text><text x="227" y="443">Code</text><text x="387" y="443">Checksum</text><text x="592" y="443">Identifiant</text><text x="800" y="443">Séquence</text></g>
+<text x="60" y="502" fill="#8990ac" font-size="12">EN-TÊTE ICMP : 8 OCTETS · ILLUSTRATION PÉDAGOGIQUE</text></g></svg>

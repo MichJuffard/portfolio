@@ -1,0 +1,76 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+<BaseLayout
+  title="À propos"
+  description="Le parcours de Michel Juffard, de la restauration à 42 Lyon, et ses intérêts pour Linux, les réseaux, l’infrastructure et la cybersécurité."
+>
+  <section class="page-intro about-intro">
+    <p class="eyebrow">~/a-propos</p>
+    <h1>Michel Juffard</h1>
+    <p class="about-tagline">De la restauration aux systèmes.</p>
+    <p>Mon parcours vers l’informatique est passé par la restauration : j’y ai travaillé une dizaine d’années avant de rejoindre 42 Lyon en juillet 2023 pour me reconvertir. Aujourd’hui, j’apprends en construisant, en cherchant et en partageant ce que je découvre.</p>
+  </section>
+
+  <section class="about-section" aria-labelledby="about-journey-title">
+    <div class="about-section-heading">
+      <p class="eyebrow">01 / LE PARCOURS</p>
+      <h2 id="about-journey-title">Du service aux systèmes</h2>
+    </div>
+    <ol class="about-timeline">
+      <li>
+        <p class="about-date">2013 — env. 2023</p>
+        <div>
+          <h3>Une décennie dans la restauration</h3>
+          <p>Ce métier m’a appris à travailler en équipe, à m’organiser dans un environnement qui bouge et à garder le cap quand les imprévus arrivent. De juillet 2021 à août 2023, comme responsable de bar, j’ai aussi géré les stocks et les approvisionnements, organisé les plannings, préparé des événements et coordonné différents interlocuteurs.</p>
+        </div>
+      </li>
+      <li>
+        <p class="about-date">Depuis juillet 2023</p>
+        <div>
+          <h3>Une reconversion à 42 Lyon</h3>
+          <p>J’y développe mes bases en programmation, algorithmique, systèmes Linux, réseaux, développement logiciel et cybersécurité à travers des projets pratiques. L’autonomie et le <em>peer-learning</em> m’amènent à chercher, essayer, expliquer et apprendre avec les autres.</p>
+          <p>Je suis également tuteur à 42 Lyon : j’accompagne d’autres étudiants, j’anime des ateliers pédagogiques et je participe à leur progression.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="about-section" aria-labelledby="about-learning-title">
+    <div class="about-section-heading">
+      <p class="eyebrow">02 / APPRENDRE ET TRANSMETTRE</p>
+      <h2 id="about-learning-title">Des réflexes construits sur le terrain</h2>
+    </div>
+    <div class="about-learning-list">
+      <article class="about-learning-row">
+        <h3>Organisation et adaptation</h3>
+        <p>En restauration, il fallait coordonner une équipe, anticiper les besoins et réagir aux changements de rythme. Je pratique aussi le judo ; mes rôles d’arbitre et de commissaire sportif y sollicitent ma rigueur et mon attention au cadre. En informatique, je mobilise ces réflexes quand un problème nécessite de revoir mon approche ou de prendre en main un nouvel outil.</p>
+      </article>
+      <article class="about-learning-row">
+        <h3>Autonomie et persévérance</h3>
+        <p>À 42, avancer sur un projet suppose de découper un problème, chercher des pistes, les tester et comprendre ses erreurs. Je progresse par essais successifs, y compris quand la solution ne vient pas du premier coup.</p>
+      </article>
+      <article class="about-learning-row">
+        <h3>Collaboration et communication</h3>
+        <p>Le travail d’équipe faisait déjà partie de mon quotidien en restauration. Le peer-learning l’a prolongé autrement : confronter des solutions, formuler une question technique et expliquer clairement son raisonnement aide tout le monde à avancer.</p>
+      </article>
+      <article class="about-learning-row">
+        <h3>Transmission</h3>
+        <p>Mon tutorat me donne l’occasion de transformer ce que j’apprends en explications et en ateliers. Aider quelqu’un à progresser m’oblige aussi à vérifier que j’ai compris le sujet moi-même.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="about-section about-interests" aria-labelledby="about-interests-title">
+    <div class="about-section-heading">
+      <p class="eyebrow">03 / LES SUJETS QUE J’EXPLORE</p>
+      <h2 id="about-interests-title">Comprendre ce qui se passe sous le capot</h2>
+    </div>
+    <p>Je m’intéresse à Linux et à l’administration système, aux réseaux et à la façon dont les services communiquent, à la programmation et à la cybersécurité, notamment offensive. L’infrastructure, Docker, le monitoring et les pratiques DevOps me permettent de relier ces sujets à des environnements concrets.</p>
+    <p>Mon <a href="/projets/homelab/">homelab</a> est un terrain d’expérimentation autour de Proxmox, Debian et de l’administration en SSH. Dans le <a href="/projets/">portfolio</a>, je documente des projets variés et ce qu’ils m’ont appris.</p>
+    <div class="about-actions">
+      <a class="button primary" href="/projets/">Parcourir mes projets <span aria-hidden="true">↗</span></a>
+      <a class="text-link" href="/projets/homelab/">Voir le homelab <span aria-hidden="true">→</span></a>
+    </div>
+  </section>
+</BaseLayout>

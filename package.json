@@ -1,0 +1,19 @@
+{
+  "name": "portfolio-homelab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "ASTRO_TELEMETRY_DISABLED=1 astro dev",
+    "check": "ASTRO_TELEMETRY_DISABLED=1 astro check",
+    "build": "npm run check && ASTRO_TELEMETRY_DISABLED=1 astro build",
+    "preview": "ASTRO_TELEMETRY_DISABLED=1 astro preview",
+    "predev": "node --experimental-strip-types scripts/generate-previews.mjs",
+    "prebuild": "node --experimental-strip-types scripts/generate-previews.mjs"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.10",
+    "astro": "^7.3.8",
+    "typescript": "^6.0.3"
+  }
+}

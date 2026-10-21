@@ -1,0 +1,17 @@
+export const ctfStages = [
+  { id: 'snowcrash', title: 'Snowcrash', subtitle: 'Découvrir l’environnement',
+    description: 'Observer les permissions, les fichiers et les programmes pour comprendre ce qu’ils permettent réellement. Cette première série m’a fait découvrir la cybersécurité offensive par l’investigation dans un environnement Linux.',
+    concepts: ['Permissions & SUID', 'Analyse de captures réseau', 'Variables d’environnement', 'Conditions de concurrence'],
+    tools: 'Linux · Wireshark · ltrace · GDB',
+    memory: 'Apprendre à ne pas se fier au seul comportement apparent : comprendre les données manipulées, les contrôles réalisés et le moment où ils ont lieu.' },
+  { id: 'rainfall', title: 'Rainfall', subtitle: 'Relier le code à la mémoire',
+    description: 'Passer de l’observation du système à l’analyse des exécutables : lire une décompilation, inspecter la mémoire et relier une copie de données à ses effets sur le programme.',
+    concepts: ['Pile & tas', 'Dépassements de buffer', 'Pointeurs de fonction', 'Chaînes de format'],
+    tools: 'GDB · Ghidra · analyse de code et de binaires',
+    memory: 'Voir concrètement que les objets occupent des zones mémoire et qu’une écriture hors limites peut modifier une donnée ou un pointeur utilisé ensuite.' },
+  { id: 'override', title: 'Override', subtitle: 'Affiner le raisonnement',
+    description: 'Approfondir l’analyse des programmes et des contrôles qu’ils effectuent. Les notes abordent notamment des erreurs de taille, des limites de copie et des contraintes liées à l’exécution.',
+    concepts: ['Off-by-one', 'Entiers & tailles de copie', 'Flux d’exécution', 'Contraintes du programme'],
+    tools: 'GDB · ltrace · décompilation et analyse mémoire',
+    memory: 'Comprendre qu’un seul octet supplémentaire peut changer un champ de taille ; cette modification peut à son tour affecter les copies effectuées plus tard.' },
+] as const;

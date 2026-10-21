@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" fill="none"><defs><linearGradient id="bg" x2="960" y2="540" gradientUnits="userSpaceOnUse"><stop stop-color="#22283d"/><stop offset="1" stop-color="#121520"/></linearGradient></defs><rect width="960" height="540" fill="url(#bg)"/>
+<g font-family="monospace"><text x="44" y="52" fill="#b5b0ff" font-size="13" letter-spacing="3">MINISHELL / SUIVRE L’EXÉCUTION DANS L’ARBRE</text><rect x="44" y="80" width="872" height="54" rx="6" fill="#11131b" stroke="#414962"/><text x="65" y="114" fill="#f0f1f7" font-size="19">❯ return 1 &amp;&amp; echo ok || echo secours</text>
+<path d="M480 208 310 286m170-78 225 78M310 326 157 402m153-76 153 76" stroke="#84c7eb" stroke-width="3"/><path d="m310 326 153 76" stroke="#62677c" stroke-width="3" stroke-dasharray="7 7"/>
+<rect x="431" y="167" width="98" height="52" rx="8" fill="#292841" stroke="#b5b0ff" stroke-width="2"/><text x="480" y="200" fill="#b5b0ff" font-size="24" text-anchor="middle">||</text>
+<rect x="261" y="277" width="98" height="52" rx="8" fill="#1b2534" stroke="#84c7eb"/><text x="310" y="310" fill="#84c7eb" font-size="24" text-anchor="middle">&amp;&amp;</text>
+<rect x="595" y="277" width="240" height="52" rx="8" fill="#1b2534" stroke="#84c7eb"/><text x="715" y="310" fill="#f0f1f7" font-size="19" text-anchor="middle">echo secours</text>
+<rect x="57" y="399" width="200" height="52" rx="8" fill="#1b2534" stroke="#84c7eb"/><text x="157" y="432" fill="#f0f1f7" font-size="19" text-anchor="middle">return 1</text>
+<rect x="363" y="399" width="200" height="52" rx="8" fill="#191d29" stroke="#62677c" stroke-dasharray="6 6"/><text x="463" y="432" fill="#8990ac" font-size="19" text-anchor="middle">echo ok</text>
+<text x="80" y="478" fill="#84c7eb" font-size="13">STATUT 1 → ÉCHEC</text><text x="413" y="478" fill="#8990ac" font-size="13">IGNORÉ</text><text x="607" y="367" fill="#84c7eb" font-size="13">BRANCHE DE SECOURS</text>
+<text x="44" y="518" fill="#8990ac" font-size="12">MA CONTRIBUTION : EXÉCUTION · PROCESSUS · PARCOURS DE L’ARBRE</text></g></svg>

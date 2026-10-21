@@ -1,0 +1,140 @@
+---
+import csv from '../data/linear-regression.csv?raw';
+import { parseObservations, train, evaluate, estimate, regressionPlot, MAX_ITERATIONS, compareRates } from '../lib/linear-regression';
+const data = parseObservations(csv);
+const states = train(data, .01, MAX_ITERATIONS);
+const comparison = compareRates(data);
+const model = states.at(-1)!;
+const metrics = evaluate(data, model);
+const format = (value: number, digits = 0) => value.toLocaleString('fr-FR', { maximumFractionDigits: digits });
+---
+<section class="lr-demo" data-regression aria-labelledby="lr-title">
+  <header><p class="eyebrow">PYTHON / APPRENDRE À PARTIR DES DONNÉES</p><h2 id="lr-title">Une droite pour estimer un prix.</h2><p>Les 24 observations du projet relient kilométrage et prix. Explorez comment la descente de gradient ajuste le modèle.</p></header>
+  <div class="lr-plot" tabindex="0" role="region" aria-label="Graphique de régression, défilement horizontal disponible sur petit écran" data-plot set:html={regressionPlot(data, model)}></div>
+  <div class="lr-legend"><span>● Observations</span><span>━ Modèle</span><span>● Estimation</span></div>
+  <div class="lr-controls" hidden>
+    <div class="lr-learning"><label for="lr-iteration">Étape d’apprentissage <output data-iteration>{states.length - 1} itérations</output></label><input id="lr-iteration" type="range" min="0" max={states.length - 1} step="1" value={states.length - 1} />
+      <div class="lr-actions"><button type="button" data-reset>Repartir de zéro</button><button type="button" data-step>+1 000 itérations</button><button type="button" data-finish>Aller à la dernière étape</button></div>
+      <label class="lr-rate" for="lr-rate">Taux d’apprentissage <select id="lr-rate"><option value="0.001">0,001</option><option value="0.01" selected>0,01 · valeur du projet</option><option value="0.1">0,1</option></select></label>
+      <label class="lr-rate" for="lr-budget">Budget maximal <select id="lr-budget"><option value="10000">10 000 itérations</option><option value="50000">50 000 itérations</option><option value="100000">100 000 itérations</option><option value="300000" selected>300 000 itérations</option></select></label>
+      <p class="lr-explanation">Un taux plus faible avance par petits pas : augmentez le budget pour lui laisser le temps de converger. Il ne garantit pas une erreur finale plus basse. Changer de taux conserve l’étape affichée, dans la limite du nouvel arrêt.</p>
+      <p class="lr-convergence" data-convergence>Seuil de variation de MSE atteint après {format(states.length - 1)} itérations.</p>
+      <label class="lr-errors"><input type="checkbox" data-residuals /> Montrer les écarts entre les observations et la droite</label>
+    </div>
+    <div class="lr-prediction"><label for="lr-mileage">Kilométrage à estimer <output data-mileage>100 000 km</output></label><input id="lr-mileage" type="range" min="0" max="260000" step="1000" value="100000" /><p class="lr-price"><span data-prediction>{format(estimate(model, 100000))}</span><small>prix estimé · unité du jeu de données</small></p><p class="lr-range" data-range>Dans la plage des données d’apprentissage.</p></div>
+  </div>
+  <div class="lr-metrics" aria-label="Indicateurs calculés sur les données d’apprentissage"><div><span>RMSE</span><strong data-rmse>{format(metrics.rmse, 1)}</strong><small>Racine de l’erreur quadratique moyenne</small></div><div><span>R²</span><strong data-r2>{format(metrics.r2, 3)}</strong><small>Ajustement sur les 24 observations</small></div><div><span>MODÈLE NORMALISÉ</span><code data-equation>θ₀ = {format(model.theta0, 1)}<br />θ₁ = {format(model.theta1, 1)}</code><small>x = (km − min) / (max − min)</small></div></div>
+  <p class="lr-status" role="status" data-status>Modèle affiché après {states.length - 1} itérations, au taux 0,01.</p>
+  <section class="lr-comparison" aria-labelledby="lr-comparison-title"><h3 id="lr-comparison-title">Moins vite, mais jusqu’au même ajustement.</h3><p>À 10 000 itérations, le taux 0,001 n’a pas fini d’apprendre. Avec un budget allant jusqu’à 300 000, les trois taux atteignent le seuil d’arrêt et donnent ici un RMSE presque identique.</p><div class="lr-table"><table><caption>Mêmes données, mêmes paramètres initiaux, même seuil de variation de MSE (10⁻⁶).</caption><thead><tr><th scope="col">Taux</th><th scope="col">RMSE à 10 000*</th><th scope="col">Arrêt par seuil</th><th scope="col">RMSE à l’arrêt</th></tr></thead><tbody>{comparison.map(row => <tr><th scope="row">{format(row.rate, 3)}</th><td>{format(row.reference.rmse, 3)}</td><td>{format(row.iterations)} itérations</td><td>{format(row.final.rmse, 3)}</td></tr>)}</tbody></table></div><p class="lr-comparison-note">* Si l’apprentissage s’arrête avant 10 000 itérations, sa dernière valeur est conservée. Un faible changement de MSE dépend aussi de la taille des pas : ce seuil n’est pas une garantie d’atteindre exactement le minimum. L’erreur restante vient aussi de la dispersion des observations autour d’une droite.</p></section>
+  <details><summary>Voir les 24 observations du projet</summary><div class="lr-table"><table><caption>Fichier data/data.csv du dépôt fourni</caption><thead><tr><th scope="col">Kilométrage</th><th scope="col">Prix</th></tr></thead><tbody>{data.map(p => <tr><td>{format(p.km)} km</td><td>{format(p.price)}</td></tr>)}</tbody></table></div></details>
+  <footer>Réimplémentation web de la méthode du projet Python : normalisation min-max du kilométrage, descente de gradient et métriques calculées sur les données d’apprentissage. Le prix n’est pas normalisé. Les mesures décrivent l’ajustement sur ce jeu, sans validation sur des données distinctes.</footer>
+</section>
+<script>
+  import csv from '../data/linear-regression.csv?raw';
+  import { parseObservations, train, evaluate, estimate, regressionPlot, MAX_ITERATIONS } from '../lib/linear-regression';
+  const root = document.querySelector<HTMLElement>('[data-regression]');
+  if (root) {
+    const data = parseObservations(csv);
+    const iteration = root.querySelector<HTMLInputElement>('#lr-iteration')!;
+    const mileage = root.querySelector<HTMLInputElement>('#lr-mileage')!;
+    const rate = root.querySelector<HTMLSelectElement>('#lr-rate')!;
+    const budget = root.querySelector<HTMLSelectElement>('#lr-budget')!;
+    const residuals = root.querySelector<HTMLInputElement>('[data-residuals]')!;
+    const step = root.querySelector<HTMLButtonElement>('[data-step]')!;
+    const finish = root.querySelector<HTMLButtonElement>('[data-finish]')!;
+    let states = train(data, .01, MAX_ITERATIONS);
+    const format = (value: number, digits = 0) => value.toLocaleString('fr-FR', { maximumFractionDigits: digits });
+    const update = () => {
+      const index = Number(iteration.value), km = Number(mileage.value), model = states[index];
+      const metrics = evaluate(data, model);
+      root.querySelector('[data-plot]')!.innerHTML = regressionPlot(data, model, km, residuals.checked);
+      root.querySelector('[data-iteration]')!.textContent = `${format(index)} itérations`;
+      root.querySelector('[data-mileage]')!.textContent = `${format(km)} km`;
+      root.querySelector('[data-prediction]')!.textContent = format(estimate(model, km));
+      root.querySelector('[data-range]')!.textContent = km < model.min || km > model.max ? 'Hors de la plage des observations : il s’agit d’une extrapolation.' : 'Dans la plage des données d’apprentissage.';
+      root.querySelector('[data-rmse]')!.textContent = format(metrics.rmse, 1);
+      root.querySelector('[data-r2]')!.textContent = format(metrics.r2, 3);
+      root.querySelector('[data-equation]')!.textContent = `θ₀ = ${format(model.theta0, 1)}\nθ₁ = ${format(model.theta1, 1)}`;
+      step.disabled = finish.disabled = index === states.length - 1;
+      const ended = index === states.length - 1;
+      root.querySelector('[data-convergence]')!.textContent = !ended
+        ? `${format(index)} itérations affichées. Le parcours calculé va jusqu’à ${format(states.length - 1)} itérations.`
+        : states.stopReason === 'threshold'
+          ? `Seuil de variation de MSE atteint après ${format(index)} itérations. Les mises à jour se sont arrêtées.`
+          : `Budget de ${format(Number(budget.value))} itérations atteint avant le seuil d’arrêt. Augmentez le budget pour poursuivre l’apprentissage.`;
+    };
+    const announce = () => {
+      const index = Number(iteration.value);
+      root.querySelector('[data-status]')!.textContent = `Modèle après ${format(index)} itérations, taux ${format(Number(rate.value), 3)}. Prix estimé pour ${format(Number(mileage.value))} km : ${format(estimate(states[index], Number(mileage.value)))}.`;
+    };
+    iteration.addEventListener('input', update); mileage.addEventListener('input', update);
+    iteration.addEventListener('change', announce); mileage.addEventListener('change', announce);
+    residuals.addEventListener('change', update);
+    const move = (index: number) => { iteration.value = String(index); update(); announce(); };
+    root.querySelector('[data-reset]')!.addEventListener('click', () => move(0));
+    step.addEventListener('click', () => move(Math.min(states.length - 1, Number(iteration.value) + 1000)));
+    finish.addEventListener('click', () => move(states.length - 1));
+    const recalculate = () => {
+      const previous = Number(iteration.value);
+      states = train(data, Number(rate.value), Number(budget.value));
+      iteration.max = String(states.length - 1);
+      move(Math.min(previous, states.length - 1));
+    };
+    rate.addEventListener('change', recalculate);
+    budget.addEventListener('change', recalculate);
+    root.querySelector<HTMLElement>('.lr-controls')!.hidden = false;
+    update();
+  }
+</script>
+<style>
+  .lr-demo { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; margin: 8px 0 56px; }
+  header { padding: 28px; }
+  .eyebrow { font-size: .6rem; margin-bottom: 12px; }
+  h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); }
+  header > p:last-child { font-size: .85rem; color: var(--muted); margin-top: 14px; }
+  .lr-plot { overflow-x: auto; }
+  .lr-plot:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .lr-plot :global(svg) { min-width: 600px; display: block; width: 100%; height: auto; }
+  .lr-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; padding: 14px; font-size: .7rem; }
+  .lr-legend span:nth-child(1) { color: #84c7eb; } .lr-legend span:nth-child(2) { color: var(--accent); } .lr-legend span:nth-child(3) { color: #e5ae81; }
+  [hidden] { display: none !important; }
+  .lr-controls { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; padding: 20px 28px; border-top: 1px solid var(--line); }
+  label { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: .78rem; align-items: center; }
+  output { font: .7rem var(--mono); color: var(--accent); }
+  input[type=range] { width: 100%; min-height: 30px; margin: 12px 0; accent-color: var(--accent); }
+  button, select { font: inherit; font-size: .7rem; padding: 9px 10px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; color: var(--text); }
+  button { cursor: pointer; } button:disabled { opacity: .45; cursor: default; }
+  button:not(:disabled):hover { border-color: var(--accent); }
+  button[data-finish] { background: var(--accent); color: #17152c; border-color: var(--accent); }
+  button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .lr-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .lr-rate { margin-top: 18px; }
+  .lr-explanation, .lr-convergence { font-size: .72rem; line-height: 1.7; margin-top: 16px; color: var(--muted); }
+  .lr-convergence { border-left: 2px solid var(--accent); padding-left: 12px; color: var(--text); }
+  .lr-comparison { margin: 0 28px 26px; padding-top: 22px; border-top: 1px solid var(--line); }
+  .lr-comparison h3 { font-size: 1.05rem; margin-bottom: 12px; }
+  .lr-comparison p { color: var(--muted); font-size: .8rem; }
+  .lr-comparison .lr-table { font-size: .75rem; max-height: none; }
+  .lr-comparison .lr-comparison-note { font-size: .7rem; margin-top: 14px; }
+  .lr-errors { justify-content: start; align-items: start; margin-top: 18px; color: var(--muted); font-size: .72rem; }
+  input[type=checkbox] { accent-color: var(--accent); width: 16px; height: 16px; flex-shrink: 0; }
+  .lr-price { margin-top: 14px; color: #e5ae81; }
+  .lr-price > span { font-size: 2.2rem; letter-spacing: -.04em; }
+  .lr-price small { display: block; color: var(--muted); font-size: .65rem; }
+  .lr-range { color: var(--muted); font-size: .72rem; margin-top: 16px; }
+  .lr-metrics { display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 12px; padding: 0 28px 22px; }
+  .lr-metrics > div { padding: 16px; background: var(--bg); border: 1px solid var(--line); border-radius: 5px; }
+  .lr-metrics span { font: .6rem var(--mono); color: var(--accent); }
+  .lr-metrics strong { display: block; font-size: 1.4rem; margin-block: 10px; }
+  .lr-metrics code { display: block; white-space: pre-line; font: .7rem/1.7 var(--mono); margin-block: 10px; }
+  .lr-metrics small { display: block; color: var(--muted); font-size: .65rem; }
+  .lr-status { font-size: .72rem; color: var(--muted); margin: 0 28px 20px; }
+  details { margin: 0 28px 24px; font-size: .78rem; }
+  summary { cursor: pointer; }
+  .lr-table { overflow-x: auto; margin-top: 18px; max-height: 280px; overflow-y: auto; }
+  table { border-collapse: collapse; width: 100%; text-align: left; color: var(--muted); }
+  caption { text-align: left; margin-bottom: 12px; font-size: .7rem; }
+  td, th { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  footer { border-top: 1px solid var(--line); padding: 20px 28px; color: var(--muted); font-size: .72rem; }
+  @media(max-width:600px) { header, footer { padding: 20px 18px; } .lr-controls { padding-inline: 18px; grid-template-columns: 1fr; } .lr-metrics { padding-inline: 18px; grid-template-columns: 1fr 1fr; } .lr-metrics > div:last-child { grid-column: 1 / -1; } .lr-status, details, .lr-comparison { margin-inline: 18px; } }
+</style>

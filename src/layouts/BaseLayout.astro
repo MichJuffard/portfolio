@@ -1,0 +1,41 @@
+---
+import '../styles/global.css';
+import { site, navigation } from '../data/site';
+interface Props { title?: string; description?: string }
+const { title, description = site.description } = Astro.props;
+const path = Astro.url.pathname;
+const pageTitle = title ? `${title} — ${site.name}` : site.title;
+const canonicalUrl = site.url ? new URL(path, site.url).href : undefined;
+---
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta name="description" content={description} />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#11131b" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={description} />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={description} />
+    {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
+    {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
+    <title>{pageTitle}</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#contenu">Aller au contenu</a>
+    <header class="site-header shell">
+      <a class="brand" href="/" aria-label="Michel Juffard — Accueil"><span aria-hidden="true">[~]</span> Michel Juffard<span class="brand-suffix"> / systèmes & réseaux</span></a>
+      <nav aria-label="Navigation principale">
+        {navigation.map(({ href, label }) => <a href={href} aria-current={(href === '/' ? path === '/' : path.startsWith(href)) ? 'page' : undefined}>{label}</a>)}
+      </nav>
+    </header>
+    <main id="contenu" class="shell"><slot /></main>
+    <footer class="site-footer shell"><span>Apprendre. Construire. Documenter.</span><span class="mono">Astro · TypeScript · CSS</span></footer>
+  </body>
+</html>

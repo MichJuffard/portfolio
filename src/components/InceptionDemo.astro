@@ -1,0 +1,79 @@
+---
+import { inceptionServices } from '../data/inception';
+const initial = inceptionServices[0];
+---
+<section class="inc-demo" data-inception aria-labelledby="inc-title">
+  <header><p class="eyebrow">DOCKER COMPOSE / DU SERVICE AUX DONNÉES</p><h2 id="inc-title">Un site. Huit services. Des rôles distincts.</h2><p>Explorez les conteneurs de mon infrastructure et les données qu’ils partagent.</p></header>
+  <div class="inc-map">
+    <p class="inc-entry">Navigateur <span aria-hidden="true">→</span> HTTPS :443</p>
+    <div class="inc-network"><p class="inc-network-label">RÉSEAU DOCKER BRIDGE</p>
+      <div class="inc-core">{inceptionServices.filter(s => s.group === 'core').map((s, i) => <div class="inc-node"><button type="button" data-service={s.id} aria-pressed={i === 0} aria-controls="inc-details" disabled><strong>{s.title}</strong><span>{s.subtitle}</span></button>{i < 2 && <span class="inc-arrow" aria-hidden="true">→</span>}</div>)}</div>
+      <p class="inc-complement">SERVICES COMPLÉMENTAIRES</p>
+      <div class="inc-extras">{inceptionServices.filter(s => s.group === 'extra').map(s => <button type="button" data-service={s.id} aria-pressed="false" aria-controls="inc-details" disabled><strong>{s.title}</strong><span>{s.subtitle}</span></button>)}</div>
+    </div>
+    <div class="inc-volumes" aria-label="Volumes persistants"><span>VOLUMES</span><span>Fichiers WordPress</span><span>Base MariaDB</span><span>Redis</span><span>Portainer</span></div>
+  </div>
+  <div id="inc-details" class="inc-details" aria-live="polite" aria-atomic="true">
+    <p class="inc-label">LE RÔLE DU SERVICE</p><h3 data-title>{initial.title}</h3><p data-role>{initial.role}</p>
+    <p class="inc-path" data-path>{initial.path}</p>
+    <dl><div><dt>Stockage</dt><dd data-storage>{initial.storage}</dd></div><div><dt>Démarrage</dt><dd data-startup>{initial.startup}</dd></div><div><dt>Configuration</dt><dd data-config>{initial.config}</dd></div></dl>
+  </div>
+  <footer>Architecture d’après les Dockerfiles, la configuration Nginx et le fichier Compose du projet. Cette vue décrit la configuration et ne mesure pas l’état des services.</footer>
+</section>
+<script>
+  import { inceptionServices } from '../data/inception';
+  const root = document.querySelector<HTMLElement>('[data-inception]');
+  if (root) {
+    const buttons = Array.from(root.querySelectorAll<HTMLButtonElement>('[data-service]'));
+    buttons.forEach(button => {
+      button.disabled = false;
+      button.addEventListener('click', () => {
+        const service = inceptionServices.find(s => s.id === button.dataset.service);
+        if (!service) return;
+        buttons.forEach(b => b.setAttribute('aria-pressed', String(b === button)));
+        for (const key of ['title', 'role', 'path', 'storage', 'startup', 'config'] as const) {
+          root.querySelector(`[data-${key}]`)!.textContent = service[key];
+        }
+      });
+    });
+  }
+</script>
+<style>
+  .inc-demo { margin: 8px 0 56px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); overflow: hidden; }
+  header { padding: 28px; }
+  .eyebrow { margin-bottom: 12px; font-size: .6rem; }
+  h2 { font-size: clamp(1.4rem, 3vw, 1.8rem); }
+  header > p:last-child { color: var(--muted); font-size: .85rem; margin-top: 14px; }
+  .inc-map { padding: 0 28px 28px; }
+  .inc-entry { text-align: center; font: .75rem var(--mono); margin-bottom: 18px; }
+  .inc-entry span { margin-inline: 14px; color: var(--accent); }
+  .inc-network { border: 1px dashed #515873; border-radius: 10px; padding: 18px; background: var(--bg); }
+  .inc-network-label, .inc-complement { font: .58rem var(--mono); color: var(--muted); letter-spacing: .08em; }
+  .inc-core { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 20px; }
+  .inc-node { position: relative; min-width: 0; }
+  .inc-node button { width: 100%; min-height: 95px; }
+  .inc-arrow { position: absolute; top: 34px; right: -19px; color: var(--accent); }
+  button { font: inherit; padding: 15px 10px; cursor: pointer; background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 6px; }
+  button strong { display: block; font-size: .9rem; font-weight: 500; }
+  button span { display: block; font-size: .66rem; color: var(--muted); margin-top: 8px; }
+  button[aria-pressed=true] { background: #292841; border-color: var(--accent); }
+  button[aria-pressed=true] strong { color: var(--accent); }
+  button:hover { border-color: var(--accent); }
+  button:disabled { cursor: default; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  .inc-complement { margin-block: 24px 14px; }
+  .inc-extras { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .inc-volumes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 18px; }
+  .inc-volumes > span:first-child { font: .58rem var(--mono); color: var(--accent); margin-right: 8px; }
+  .inc-volumes > span:not(:first-child) { font-size: .66rem; color: var(--muted); border: 1px solid var(--line); padding: 5px 9px; border-radius: 4px; }
+  .inc-details { padding: 26px 28px; border-top: 1px solid var(--line); background: var(--bg); }
+  .inc-label { font: .6rem var(--mono); color: var(--accent); margin-bottom: 12px; }
+  h3 { margin-bottom: 14px; }
+  [data-role], dd { color: var(--muted); font-size: .82rem; }
+  .inc-path { font: .72rem/1.8 var(--mono); color: var(--accent); border-left: 2px solid var(--accent); padding-left: 14px; margin-block: 22px; overflow-wrap: anywhere; }
+  dl { margin: 0; display: grid; gap: 18px; }
+  dt { font-size: .75rem; font-weight: 600; margin-bottom: 5px; }
+  dd { margin: 0; }
+  footer { padding: 20px 28px; border-top: 1px solid var(--line); color: var(--muted); font-size: .72rem; }
+  @media(max-width:600px) { header, .inc-details, footer { padding: 20px 18px; } .inc-map { padding-inline: 18px; } .inc-network { padding: 14px; } .inc-core { grid-template-columns: 1fr; gap: 24px; } .inc-arrow { top: auto; right: 50%; bottom: -24px; transform: rotate(90deg); } .inc-extras { grid-template-columns: repeat(2, 1fr); } }
+</style>
