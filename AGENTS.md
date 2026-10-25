@@ -54,3 +54,18 @@
 Les modifications du README doivent faire partie du commit concerné lorsqu'elles documentent directement une évolution du code.
 
 **Contexte actuel :** le portfolio est hébergé chez OVHcloud. Sa migration vers le homelab est un objectif à court terme, mais elle n'est pas encore réalisée.
+
+## CI/CD — Périmètre d'intervention de Codex
+
+La chaîne CI/CD du portfolio constitue un projet d'apprentissage personnel. Je souhaite concevoir, comprendre, maintenir et faire évoluer moi-même les workflows GitHub Actions ainsi que les scripts associés au déploiement.
+
+En conséquence :
+
+- Ne jamais créer, modifier, supprimer ou réorganiser les fichiers de `.github/workflows/` ou les scripts CI/CD sans demande explicite de ma part.
+- Ne pas modifier les secrets, variables d'environnement, permissions ou paramètres de déploiement.
+- Ne pas ajouter de déclenchement automatique, notamment sur `push`, sans autorisation explicite.
+- Si une évolution du portfolio nécessite une adaptation de la CI/CD, signaler le besoin et expliquer les modifications recommandées, sans les appliquer.
+- Les commandes de vérification existantes (tests, contrôles de qualité, build) peuvent être exécutées pour valider les changements, sans modifier leur configuration.
+- Documenter dans le README les évolutions CI/CD effectivement réalisées et validées.
+
+**Objectif :** utiliser Codex comme assistant pour le développement du portfolio, tout en conservant la maîtrise technique et pédagogique de la chaîne CI/CD.
