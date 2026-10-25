@@ -1,6 +1,6 @@
 # Michel Juffard — Systèmes, réseaux & cybersécurité
 
-Portfolio professionnel en français : Michel Juffard, étudiant à 42 Lyon et tuteur, en recherche d’une alternance en systèmes, réseaux ou cybersécurité. Le site est construit avec Astro, TypeScript, Markdown et CSS natif. Les faits de référence se trouvent dans `PROJECT.md`.
+Portfolio professionnel en français : Michel Juffard, étudiant à 42 Lyon et tuteur, en recherche d’une alternance en systèmes, réseaux ou cybersécurité. Le site statique est construit avec Astro, TypeScript, Markdown et CSS natif. Il est publié en HTTPS sur [mjuffard.fr](https://mjuffard.fr) et hébergé actuellement chez OVHcloud. Les faits de référence se trouvent dans `PROJECT.md`.
 
 ## Contact public
 
@@ -35,7 +35,7 @@ node --experimental-strip-types --test scripts/*.test.mjs
 - `src/components/ProjectCard.astro` : carte réutilisée sur l’accueil et la liste des projets.
 - `src/content/projects/` : fiches Markdown et métadonnées.
 - `src/content.config.ts` : validation des données des fiches.
-- `src/data/site.ts` : identité, descriptions, configuration centralisée de la future URL publique et navigation principale (Accueil, Projets, À propos, Contact). L’URL reste vide tant que le domaine n’est pas choisi ; aucune adresse locale n’est publiée dans les métadonnées.
+- `src/data/site.ts` : identité, descriptions, URL publique utilisée pour les métadonnées canonical et Open Graph, et navigation principale (Accueil, Projets, À propos, Contact).
 - `src/styles/global.css` : palette, typographie et règles responsive, sans framework CSS ni police externe.
 
 ## Ajouter une fiche
@@ -44,9 +44,19 @@ Créer un fichier Markdown dans `src/content/projects/` avec les champs `title`,
 
 Les fiches détaillées commencent par une synthèse de l’objectif, de la contribution connue, des apprentissages et des technologies ; les pages longues proposent un sommaire interne. Les démonstrations pédagogiques et textes techniques existants restent en place. Snowcrash, Rainfall et Override sont regroupés dans une fiche CTF. Les contributions documentées concernent Minishell et Transcendance ; ft_ping reste en cours. Le homelab est une fiche personnelle majeure à `/projets/homelab/` ; les anciennes URL `/homelab/`, `/projets/proxmox/`, `/projets/debian-ssh/` et `/projets/diagnostic-reseau/` redirigent vers cette fiche. Elle documente maintenant le VPN WireGuard opérationnel et testé depuis un réseau mobile, ainsi que les évolutions encore à réaliser. Le problème initial de liaison du répéteur Wi-Fi avec la Freebox a été résolu via Freebox Connect.
 
-## Hébergement futur
+## Hébergement et chaîne CI/CD
 
-Le dossier `dist/` pourra être servi par Nginx sur Debian ; Node.js n’est pas nécessaire sur le serveur pour servir ce résultat. Aucun déploiement ni changement du serveur n’a été réalisé. Le domaine public n’est pas encore choisi ; le canonical et les URL absolues de partage seront activés une fois cette adresse définie.
+Le site statique est actuellement hébergé chez **OVHcloud** et publié en HTTPS sur **mjuffard.fr**. Il est versionné sur GitHub. Les workflows GitHub Actions exécutent l’analyse des secrets avec Gitleaks, les tests et contrôles du projet, puis le build Astro. Un artefact transmet les fichiers construits au job de déploiement.
+
+Le déploiement SFTP vers OVHcloud utilise le script Python `scripts/deploy_sftp.py` et Paramiko. L’empreinte SSH du serveur est vérifiée avant l’authentification ; les secrets et variables de déploiement sont fournis par GitHub Actions. Un premier déploiement manuel via `workflow_dispatch` a réussi. Le déploiement n’est pas déclenché automatiquement à chaque push.
+
+La fiche [Portfolio et chaîne CI/CD](/projets/portfolio-cicd/) décrit le besoin, les choix techniques, l’implémentation, la validation et les évolutions prévues.
+
+**État opérationnel :** l’hébergement OVHcloud, HTTPS, les contrôles CI, le build Astro et le transfert SFTP manuel sont validés.
+
+**Évolutions à réaliser :** automatiser le déploiement après validation de la CI, supprimer les anciens fichiers distants de façon maîtrisée, mettre en place un déploiement atomique et un retour arrière, et migrer l’hébergement vers le homelab Proxmox. La migration est un objectif à court terme, pas une réalisation actuelle. La supervision réelle du portfolio depuis le homelab reste également à mettre en place.
+
+Le dossier `dist/` contient le site compilé ; Node.js n’est pas nécessaire sur le serveur pour servir ce résultat statique.
 
 ## Visuel miniRT
 
@@ -153,9 +163,7 @@ node --experimental-strip-types --test scripts/homelab-monitoring.test.mjs
 
 ## Utilisation de l'IA et contributions personnelles
 
-Ce portfolio a été développé avec l'assistance de **Codex (OpenAI)**.
-
-J'ai défini les objectifs du site, son contenu, son organisation et son orientation graphique. Codex a été utilisé principalement pour la génération, l'intégration et l'évolution du code du portfolio, basé sur Astro et TypeScript.
+Le frontend initial de ce portfolio a été développé avec l’assistance de **Codex (OpenAI)**, sous ma direction. Je définis les objectifs, le contenu, l’organisation et l’orientation graphique du site. Codex m’a assisté pour générer et intégrer le code Astro et TypeScript, puis pour faire évoluer le portfolio.
 
 Cette démarche me permet d'expérimenter le développement assisté par IA tout en travaillant sur la conception, l'analyse du code et l'intégration des fonctionnalités.
 
@@ -163,7 +171,7 @@ Cette démarche me permet d'expérimenter le développement assisté par IA tout
 
 - **Les projets présentés** : les projets techniques décrits dans ce portfolio correspondent à mon parcours, à mes réalisations et à mes apprentissages.
 - **L'infrastructure homelab** : installation, configuration, administration et expérimentation sur mon infrastructure personnelle.
-- **La première mise en production** : compilation Astro, transfert SFTP vers OVHcloud, configuration du domaine et diagnostic DNS/HTTPS.
+- **La mise en production** : configuration du domaine, diagnostic DNS/HTTPS et validation du déploiement SFTP vers OVHcloud, d’abord manuellement puis avec le workflow GitHub Actions.
 - **Le CI/CD** : conception, configuration et maintenance des workflows GitHub Actions pour les tests, la compilation et le déploiement, réalisés personnellement sans génération de code par Codex.
 
 ### Mon approche
