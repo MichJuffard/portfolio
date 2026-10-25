@@ -39,3 +39,18 @@
 - Les déploiements sont gérés par GitHub Actions.
 - Ne jamais exposer les identifiants SFTP ou les secrets GitHub.
 - Vérifier que les workflows CI passent avant toute mise en production.
+
+## Documentation et README
+
+À chaque itération de développement :
+
+1. Relire les modifications effectuées et vérifier si elles ont un impact sur la documentation du projet.
+2. Mettre à jour `README.md` dans la même itération pour refléter les fonctionnalités, choix techniques, commandes, procédures et changements de configuration réellement réalisés.
+3. Distinguer explicitement les fonctionnalités opérationnelles, les travaux en cours et les évolutions prévues.
+4. Maintenir à jour les informations relatives à l'hébergement et à la chaîne CI/CD.
+5. Ne jamais documenter une fonctionnalité comme terminée si elle n'a pas été implémentée ou validée.
+6. Si aucune modification du README n'est nécessaire, l'indiquer dans le récapitulatif final avec une courte justification.
+
+Les modifications du README doivent faire partie du commit concerné lorsqu'elles documentent directement une évolution du code.
+
+**Contexte actuel :** le portfolio est hébergé chez OVHcloud. Sa migration vers le homelab est un objectif à court terme, mais elle n'est pas encore réalisée.
