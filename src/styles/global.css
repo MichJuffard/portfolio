@@ -123,6 +123,27 @@
   .project-toc a:hover { text-decoration: underline; }
   .project-group { margin-bottom: 48px; scroll-margin-top: 24px; }
   .project-group > p { max-width: 680px; margin: 16px 0 26px; color: var(--muted); }
+  .homelab-architecture { max-width: 800px; margin: 38px 0 56px; padding: 22px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
+  .homelab-architecture figcaption { margin-bottom: 20px; color: var(--text); font-size: 1.1rem; font-weight: 600; }
+  .homelab-flow { display: grid; gap: 8px; }
+  .homelab-flow-node { min-width: 0; padding: 15px 18px; border: 1px solid #414761; border-radius: 5px; background: #202436; }
+  .homelab-flow-node > span, .homelab-service > span { display: block; margin-bottom: 5px; color: var(--accent); font: .62rem var(--mono); letter-spacing: .04em; }
+  .homelab-flow-node > strong, .homelab-service > strong { display: block; color: var(--text); font-size: .95rem; }
+  .homelab-flow-node > small, .homelab-service > small { display: block; margin-top: 5px; color: var(--muted); font-size: .72rem; line-height: 1.55; }
+  .homelab-flow-link { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--accent); }
+  .homelab-flow-link > span { font-size: 1.2rem; line-height: 1; }
+  .homelab-flow-link > small { font: .63rem var(--mono); }
+  .homelab-router { border-color: #7773a9; }
+  .homelab-host { padding: 18px; border-color: #7773a9; background: #191d29; }
+  .homelab-host > header { margin-bottom: 14px; }
+  .homelab-host > header > span { display: block; margin-bottom: 5px; color: var(--muted); font: .62rem var(--mono); }
+  .homelab-host > header > strong { color: var(--text); font-size: 1rem; }
+  .homelab-host-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .homelab-service { min-width: 0; padding: 13px; border: 1px solid var(--line); border-radius: 4px; background: #11131b; }
+  .homelab-vpn { border-color: #7773a9; }
+  .homelab-admin { border-color: #477854; }
+  .homelab-debian { grid-column: 1 / -1; }
+  .homelab-diagram-note { margin-top: 14px; color: var(--muted); font-size: .7rem; }
   .skill-row { padding-block: 20px; border-bottom: 1px solid var(--line); }
   .skill-row:first-child { padding-top: 0; }
   .skill-row h3 { margin-bottom: 8px; }
@@ -200,6 +221,9 @@
     .monitor-panel { padding: 18px; }
     .monitor-header { flex-direction: column; }
     .monitor-metrics { grid-template-columns: 1fr; }
+    .homelab-architecture { padding: 16px; }
+    .homelab-host-grid { grid-template-columns: 1fr; }
+    .homelab-debian { grid-column: auto; }
   }
   @media (max-width: 720px) {
     .shell { padding-inline: 22px; }

@@ -10,6 +10,7 @@ import InceptionDemo from '../../components/InceptionDemo.astro';
 import MinishellDemo from '../../components/MinishellDemo.astro';
 import LinearRegressionDemo from '../../components/LinearRegressionDemo.astro';
 import CTFDemo from '../../components/CTFDemo.astro';
+import HomelabArchitecture from '../../components/HomelabArchitecture.astro';
 import HomelabMonitoring from '../../components/HomelabMonitoring.astro';
 export async function getStaticPaths() {
   return (await getCollection('projects')).map(project => ({ params: { slug: project.id }, props: { project } }));
@@ -44,6 +45,7 @@ const outline = headings.filter(heading => heading.depth === 2);
       <ul>{outline.map(heading => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}</ul>
     </nav>}
 
+    {project.id === 'homelab' && <HomelabArchitecture />}
     {project.id === 'homelab' && project.data.monitoringEnabled && <HomelabMonitoring />}
     {project.id === 'homelab' && !project.data.monitoringEnabled && project.data.monitoringFallback && <section class="monitor-fallback"><h2>Monitoring</h2><p>{project.data.monitoringFallback}</p></section>}
     {project.id === 'minirt' && <MiniRTDemo />}

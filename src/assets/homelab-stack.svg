@@ -1,7 +1,47 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" fill="none"><defs><linearGradient id="bg" x2="960" y2="540" gradientUnits="userSpaceOnUse"><stop stop-color="#22283d"/><stop offset="1" stop-color="#121520"/></linearGradient></defs><rect width="960" height="540" fill="url(#bg)"/>
-<g font-family="monospace"><text x="44" y="55" fill="#b5b0ff" font-size="13" letter-spacing="3">HOMELAB / LINUX &amp; VIRTUALISATION</text>
-<rect x="70" y="125" width="820" height="307" rx="14" fill="#191d29" stroke="#4e5673"/><text x="100" y="163" fill="#b0b6ca" font-size="13">MATÉRIEL RÉUTILISÉ / HYPERVISEUR</text>
-<rect x="103" y="192" width="255" height="187" rx="9" fill="#292841" stroke="#b5b0ff"/><text x="129" y="229" fill="#b5b0ff" font-size="13">VIRTUALISATION</text><text x="129" y="273" fill="#f0f1f7" font-size="28">Proxmox VE</text><text x="129" y="312" fill="#b0b6ca" font-size="14">Hôte physique</text><text x="129" y="343" fill="#b0b6ca" font-size="14">Bridge réseau</text>
-<path d="M358 285h88m-12-8 12 8-12 8" stroke="#b5b0ff" stroke-width="3"/>
-<rect x="447" y="192" width="410" height="187" rx="9" fill="#1b2534" stroke="#84c7eb"/><text x="474" y="229" fill="#84c7eb" font-size="13">MACHINE VIRTUELLE</text><text x="474" y="273" fill="#f0f1f7" font-size="28">Debian Server</text><text x="474" y="312" fill="#b0b6ca" font-size="14">Linux · réseau virtuel</text><text x="474" y="343" fill="#b0b6ca" font-size="14">Administration SSH depuis le Mac</text>
-<text x="44" y="496" fill="#8990ac" font-size="12">INFRASTRUCTURE PERSONNELLE · INSTALLATION &amp; ACCÈS SSH CONFIRMÉS</text></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" fill="none">
+  <defs>
+    <linearGradient id="bg" x2="960" y2="540" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#22283d"/><stop offset="1" stop-color="#121520"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="540" fill="url(#bg)"/>
+  <g font-family="monospace">
+    <text x="42" y="52" fill="#b5b0ff" font-size="13" letter-spacing="3">HOMELAB / VPN WIREGUARD</text>
+    <text x="42" y="81" fill="#8990ac" font-size="13">ACCÈS DISTANT TESTÉ · PROXMOX NON EXPOSÉ DIRECTEMENT</text>
+
+    <rect x="42" y="139" width="208" height="204" rx="10" fill="#191d29" stroke="#4e5673"/>
+    <text x="62" y="175" fill="#84c7eb" font-size="12">CLIENT DISTANT</text>
+    <text x="62" y="218" fill="#f0f1f7" font-size="22">Mac</text>
+    <text x="62" y="248" fill="#b0b6ca" font-size="14">Réseau mobile</text>
+    <text x="62" y="292" fill="#b5b0ff" font-size="13">Pair WireGuard</text>
+
+    <path d="M250 241h38m-12-8 12 8-12 8" stroke="#b5b0ff" stroke-width="3"/>
+    <text x="254" y="220" fill="#b0b6ca" font-size="10">TUNNEL</text>
+
+    <rect x="292" y="139" width="194" height="204" rx="10" fill="#191d29" stroke="#4e5673"/>
+    <text x="312" y="175" fill="#84c7eb" font-size="12">ACCÈS INTERNET</text>
+    <text x="312" y="218" fill="#f0f1f7" font-size="22">Freebox</text>
+    <text x="312" y="250" fill="#b0b6ca" font-size="13">1 port UDP</text>
+    <text x="312" y="275" fill="#b0b6ca" font-size="13">redirigé vers</text>
+    <text x="312" y="300" fill="#b0b6ca" font-size="13">le conteneur VPN</text>
+
+    <path d="M486 241h38m-12-8 12 8-12 8" stroke="#b5b0ff" stroke-width="3"/>
+    <text x="488" y="220" fill="#b0b6ca" font-size="10">vmbr0</text>
+
+    <rect x="528" y="118" width="390" height="320" rx="12" fill="#191d29" stroke="#7773a9"/>
+    <text x="552" y="153" fill="#b0b6ca" font-size="12">SERVEUR PHYSIQUE · PROXMOX VE 9.2</text>
+    <rect x="552" y="174" width="342" height="145" rx="8" fill="#292841" stroke="#b5b0ff"/>
+    <text x="574" y="205" fill="#b5b0ff" font-size="12">LXC NON PRIVILÉGIÉ · ALPINE 3.23</text>
+    <text x="574" y="244" fill="#f0f1f7" font-size="23">WireGuard</text>
+    <text x="574" y="272" fill="#b0b6ca" font-size="13">10.77.0.0/24 · OpenRC</text>
+    <text x="574" y="296" fill="#b0b6ca" font-size="13">Routage · iptables · NAT</text>
+    <rect x="552" y="333" width="164" height="80" rx="6" fill="#1c2930" stroke="#84c7eb"/>
+    <text x="568" y="362" fill="#f0f1f7" font-size="15">Interface</text>
+    <text x="568" y="386" fill="#f0f1f7" font-size="15">Proxmox</text>
+    <rect x="728" y="333" width="166" height="80" rx="6" fill="#202436" stroke="#4e5673"/>
+    <text x="744" y="362" fill="#b0b6ca" font-size="14">VM Debian 13</text>
+    <text x="744" y="386" fill="#8990ac" font-size="12">facultative</text>
+
+    <text x="42" y="489" fill="#8990ac" font-size="12">VPN ACTIF · ACCÈS ACTUEL À PROXMOX · AUTRES MACHINES À ÉTENDRE PLUS TARD</text>
+  </g>
+</svg>

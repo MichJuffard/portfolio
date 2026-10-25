@@ -1,0 +1,44 @@
+<figure class="homelab-architecture" aria-labelledby="homelab-architecture-caption">
+  <figcaption id="homelab-architecture-caption">Architecture du VPN actuellement testée</figcaption>
+  <div class="homelab-flow">
+    <div class="homelab-flow-node homelab-client">
+      <span>Client distant</span>
+      <strong>Mac · réseau mobile</strong>
+      <small>Pair WireGuard</small>
+    </div>
+    <div class="homelab-flow-link" aria-hidden="true"><span>↓</span><small>Tunnel chiffré</small></div>
+    <div class="homelab-flow-node homelab-router">
+      <span>Accès Internet</span>
+      <strong>Freebox</strong>
+      <small>Un port UDP redirigé vers le conteneur VPN</small>
+    </div>
+    <div class="homelab-flow-link" aria-hidden="true"><span>↓</span><small>Bridge Proxmox vmbr0</small></div>
+    <section class="homelab-flow-node homelab-host" aria-label="Environnements hébergés sur Proxmox">
+      <header>
+        <span>Serveur physique · tour ASUS réutilisée</span>
+        <strong>Proxmox VE 9.2</strong>
+      </header>
+      <div class="homelab-host-grid">
+        <div class="homelab-service homelab-vpn">
+          <span>LXC non privilégié · ID 101</span>
+          <strong>Alpine Linux 3.23 · WireGuard</strong>
+          <small>Tunnel : 10.77.0.0/24</small>
+          <small>Transfert IPv4 · iptables · NAT/MASQUERADE</small>
+          <small>Pare-feu IPv6 · services OpenRC</small>
+        </div>
+        <div class="homelab-service homelab-admin">
+          <span>Accessible à travers le tunnel</span>
+          <strong>Administration Proxmox</strong>
+          <small>Interface non exposée directement sur Internet</small>
+        </div>
+        <div class="homelab-service homelab-debian">
+          <span>Environnement séparé · facultatif</span>
+          <strong>VM Debian 13</strong>
+          <small>Arrêtée en dehors des expérimentations Linux, Docker et DevOps</small>
+          <small>Non requise pour le fonctionnement du VPN</small>
+        </div>
+      </div>
+    </section>
+  </div>
+  <p class="homelab-diagram-note">Schéma fonctionnel : il ne détaille ni les adresses du LAN domestique ni les informations d’accès.</p>
+</figure>
