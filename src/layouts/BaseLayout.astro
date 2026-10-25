@@ -1,11 +1,11 @@
 ---
 import '../styles/global.css';
 import { site, navigation } from '../data/site';
-interface Props { title?: string; description?: string }
-const { title, description = site.description } = Astro.props;
+interface Props { title?: string; description?: string; canonical?: boolean }
+const { title, description = site.description, canonical = true } = Astro.props;
 const path = Astro.url.pathname;
 const pageTitle = title ? `${title} — ${site.name}` : site.title;
-const canonicalUrl = site.url ? new URL(path, site.url).href : undefined;
+const canonicalUrl = canonical && site.url ? new URL(path, site.url).href : undefined;
 ---
 <!doctype html>
 <html lang="fr">
