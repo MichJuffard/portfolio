@@ -150,3 +150,24 @@ Les cas de validation, de mesure manquante, de valeur invalide et de fraîcheur 
 ```sh
 node --experimental-strip-types --test scripts/homelab-monitoring.test.mjs
 ```
+
+## Utilisation de l'IA et contributions personnelles
+
+Ce portfolio a été développé avec l'assistance de **Codex (OpenAI)**.
+
+J'ai défini les objectifs du site, son contenu, son organisation et son orientation graphique. Codex a été utilisé principalement pour la génération, l'intégration et l'évolution du code du portfolio, basé sur Astro et TypeScript.
+
+Cette démarche me permet d'expérimenter le développement assisté par IA tout en travaillant sur la conception, l'analyse du code et l'intégration des fonctionnalités.
+
+### Ce que j'ai réalisé personnellement
+
+- **Les projets présentés** : les projets techniques décrits dans ce portfolio correspondent à mon parcours, à mes réalisations et à mes apprentissages.
+- **L'infrastructure homelab** : installation, configuration, administration et expérimentation sur mon infrastructure personnelle.
+- **La première mise en production** : compilation Astro, transfert SFTP vers OVHcloud, configuration du domaine et diagnostic DNS/HTTPS.
+- **Le CI/CD** : conception, configuration et maintenance des workflows GitHub Actions pour les tests, la compilation et le déploiement, réalisés personnellement sans génération de code par Codex.
+
+### Mon approche
+
+Je considère l'IA comme un outil d'assistance au développement, et non comme un substitut à la compréhension technique.
+
+Ce portfolio me sert également de terrain d'expérimentation pour les pratiques DevOps : versionnement, tests automatisés, intégration continue, déploiement et administration de services.
