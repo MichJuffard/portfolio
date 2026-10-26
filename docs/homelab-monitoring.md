@@ -1,69 +1,42 @@
-# Format public des métriques du homelab
+# Monitoring courant du nœud Proxmox
 
-## État actuel
+## Fonctionnement opérationnel
 
-Le widget de `/projets/homelab/` utilise des valeurs de démonstration fabriquées. Elles sont signalées comme fictives, y compris leur horodatage. Aucun endpoint n’est configuré et le navigateur ne fait aucune requête réseau dans cette configuration.
+Le widget de `/projets/homelab/` lit le JSON public [`/data/homelab-metrics.json`](https://mjuffard.fr/data/homelab-metrics.json). Le navigateur ne contacte que ce fichier statique ; il n’appelle jamais l’API Proxmox.
 
-Le composant Astro, les types, la validation et la source de démonstration sont séparés :
+Un LXC dédié sous Alpine Linux 3.23 interroge l’API Proxmox en HTTPS avec validation du certificat TLS et un jeton limité à `Sys.Audit`. Un script shell utilise `curl` et `jq` pour calculer les trois pourcentages. Une tâche cron collecte et publie le fichier toutes les trois minutes par SFTP vers l’hébergement OVHcloud. Le portfolio demeure hébergé chez OVHcloud ; la migration du site vers le homelab reste prévue.
 
-- `src/components/HomelabMonitoring.astro` affiche le tableau de bord et gère son éventuel rafraîchissement client ;
-- `src/types/homelab-monitoring.ts` définit le format TypeScript ;
-- `src/lib/homelab-monitoring.ts` valide le JSON et détermine l’état selon l’âge des données ;
-- `src/data/homelab-monitoring-demo.ts` fournit l’échantillon fictif.
+## Format du fichier public
 
-Le champ optionnel `PUBLIC_HOMELAB_METRICS_URL` permettrait plus tard de configurer l’URL d’un JSON public en lecture seule. Il n’est pas défini pour cette version. Cette variable ne doit contenir ni secret, ni URL Proxmox, ni adresse de service privé. Le code accepte une URL HTTPS vers un fichier `.json` public ou un chemin `.json` relatif à l’origine ; il rejette HTTP, les adresses privées évidentes, les identifiants et les paramètres de requête. Le nom DNS devra tout de même être vérifié avant publication, car le build statique ne peut pas connaître sa résolution réseau.
+Le fichier contient exactement ces quatre propriétés :
 
-## Schéma version 1
+| Champ | Type et signification |
+| --- | --- |
+| `collected_at` | Chaîne ISO 8601 représentant l’horodatage UTC de collecte. |
+| `cpu_percent` | Nombre fini de 0 à 100 : utilisation CPU du nœud. |
+| `memory_percent` | Nombre fini de 0 à 100 : utilisation mémoire du nœud. |
+| `storage_percent` | Nombre fini de 0 à 100 : utilisation de `rootfs` du nœud. |
 
-```json
-{
-  "schemaVersion": 1,
-  "measuredAt": "2026-10-21T08:30:00.000Z",
-  "scope": "proxmox-host",
-  "metrics": {
-    "cpuPercent": 18.4,
-    "memoryPercent": 62.1,
-    "storagePercent": 41.7
-  }
-}
-```
+Les champs manquants, supplémentaires, mal typés ou hors limites font rejeter toute la réponse. Aucun nom de machine, identifiant, adresse ou détail de service n’est nécessaire ni accepté.
 
-Cet exemple est fictif et ne décrit pas l’état réel du homelab.
+`storage_percent` concerne uniquement le système de fichiers racine (`rootfs`) de Proxmox. Il ne représente pas l’ensemble des disques ni l’espace de stockage du homelab.
 
-| Champ | Format | Règle |
-| --- | --- | --- |
-| `schemaVersion` | entier | Valeur `1` pour ce schéma. |
-| `measuredAt` | chaîne ISO 8601 UTC | Horodatage UTC avec millisecondes, par exemple `2026-10-21T08:30:00.000Z`. |
-| `scope` | `proxmox-host` ou `vm` | Un seul périmètre par document. L’interface affiche « Hôte Proxmox » ou « Machine virtuelle (sans nom) ». |
-| `metrics.cpuPercent` | nombre ou `null` | Pourcentage entre 0 et 100. |
-| `metrics.memoryPercent` | nombre ou `null` | Pourcentage entre 0 et 100. |
-| `metrics.storagePercent` | nombre ou `null` | Pourcentage entre 0 et 100. |
+## Affichage et fraîcheur
 
-Une métrique absente ou `null` s’affiche comme indisponible, jamais comme zéro. Si aucune métrique n’est exploitable, l’état global est « Indisponible ». Les champs inconnus sont rejetés afin que le format reste strict et minimal. Les métriques d’un document doivent toutes provenir du périmètre indiqué ; ne pas mélanger un hôte et une VM dans le même objet.
+- Le premier chargement client a lieu à l’initialisation du widget, puis une nouvelle requête est faite toutes les trois minutes avec le cache désactivé.
+- Une mesure reste disponible jusqu’à 15 minutes après `collected_at`. À 15 minutes ou davantage, elle passe à l’état « Données périmées » ; les valeurs restantes sont explicitement marquées anciennes et les jauges sont masquées.
+- Le composant programme aussi la transition de fraîcheur à partir de l’horodatage, même si la page reste ouverte entre deux rafraîchissements.
+- Une date invalide ou située dans le futur, une réponse HTTP en erreur, un JSON malformé ou une erreur réseau affiche un état d’indisponibilité sans fabriquer de valeurs. Si une dernière mesure est conservée en mémoire, elle est présentée comme ancienne ou comme dernière mesure connue, jamais comme l’état actuel.
+- La page Astro est générée statiquement. Le build ne télécharge pas le JSON et ne dépend donc ni du homelab ni de la disponibilité de l’endpoint. Sans JavaScript, le widget indique qu’aucune mesure n’a été reçue.
 
-Le collecteur doit utiliser des dénominateurs cohérents pour les pourcentages : CPU relativement à la capacité du périmètre, mémoire utilisée sur la mémoire disponible et stockage utilisé sur une capacité explicitement choisie. Pour une VM, les trois métriques doivent décrire la même VM, sans inclure son identifiant. Si une mesure n’a pas de définition stable ou ne peut pas être collectée, elle doit être omise ou transmise comme `null`.
+Les barres sont des éléments HTML `<meter>` avec des libellés accessibles. Les changements de pourcentage et l’heure ne sont pas dans une région live ; le statut textuel n’est annoncé que lorsqu’il change.
 
-## États et rafraîchissement
+## Périmètre
 
-- **Démo** : échantillon fictif fourni par le site, clairement signalé.
-- **Disponible** : JSON valide, avec au moins une métrique et une mesure vieille de dix minutes au plus.
-- **Données anciennes** : JSON valide, mais mesure plus vieille que dix minutes.
-- **Indisponible** : récupération impossible sans mesure valide exploitable en cache, ou mesure reçue sans métrique exploitable. Si la dernière mesure valide en cache est trop ancienne, l’état reste « Données anciennes » et la note signale l’échec de l’actualisation.
+Ce système affiche seulement les mesures courantes CPU, mémoire et stockage système du nœud Proxmox. Il n’y a pas de Prometheus, Grafana, stockage historique ou système d’alertes installé. Ce widget ne présente donc pas l’état des services et n’est pas une plateforme complète d’observabilité.
 
-Le rafraîchissement prévu est de trois minutes. Une erreur de récupération ne signifie pas que l’homelab est hors ligne. Lorsque JavaScript est désactivé, l’échantillon de démonstration reste affiché ; pour une source réelle, la page indique qu’aucune mesure n’a été chargée plutôt que de montrer des valeurs inventées. Une source d’un autre domaine devra autoriser en CORS la lecture par le portfolio.
-
-Le test du schéma et des états se lance avec :
+Les tests de validation et de fraîcheur se lancent avec :
 
 ```sh
 node --experimental-strip-types --test scripts/homelab-monitoring.test.mjs
 ```
-
-## Publication et confidentialité
-
-Une évolution possible consiste à faire lire les métriques autorisées par un collecteur interne, à les filtrer et à les agréger, puis à publier ce JSON minimal par une connexion sortante authentifiée. Les identifiants de publication restent sur le collecteur et ne sont jamais intégrés au portfolio. Le navigateur ne doit contacter que cette source publique, jamais Proxmox, Prometheus ou un service privé.
-
-Le JSON ne doit contenir aucun nom interne, adresse IP, port, utilisateur, identifiant de VM, détail de topologie, journal système, état de service personnel ou donnée du cloud familial. Le champ `scope` est volontairement limité à une catégorie générale et aucun identifiant de machine n’est accepté.
-
-Le portfolio et le homelab peuvent être hébergés sur la même VM. Dans ce cas, une panne de cette VM rend aussi le portfolio inaccessible ; le widget ne peut pas en informer les visiteurs. Un hébergement externe du portfolio et une publication indépendante des métriques pourraient réduire cette dépendance, sans garantir que le collecteur ou la publication fonctionne. Les données anciennes indiquent seulement la date de la dernière mesure reçue, jamais l’état en ligne ou hors ligne de l’infrastructure.
-
-Le widget se désactive via `monitoringEnabled: false` dans la fiche homelab. Le texte `monitoringFallback` fournit alors une courte présentation statique. Aucun service externe, collecteur ni surveillance active n’est installé dans cette version.

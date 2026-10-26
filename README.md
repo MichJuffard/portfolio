@@ -54,7 +54,7 @@ La fiche [Portfolio et chaîne CI/CD](/projets/portfolio-cicd/) décrit le besoi
 
 **État opérationnel :** l’hébergement OVHcloud, HTTPS, les contrôles CI, le build Astro et le transfert SFTP manuel sont validés.
 
-**Évolutions à réaliser :** automatiser le déploiement après validation de la CI, supprimer les anciens fichiers distants de façon maîtrisée, mettre en place un déploiement atomique et un retour arrière, et migrer l’hébergement vers le homelab Proxmox. La migration est un objectif à court terme, pas une réalisation actuelle. La supervision réelle du portfolio depuis le homelab reste également à mettre en place.
+**Évolutions à réaliser :** automatiser le déploiement après validation de la CI, supprimer les anciens fichiers distants de façon maîtrisée, mettre en place un déploiement atomique et un retour arrière, et migrer l’hébergement vers le homelab Proxmox. La migration est un objectif à court terme, pas une réalisation actuelle.
 
 Le dossier `dist/` contient le site compilé ; Node.js n’est pas nécessaire sur le serveur pour servir ce résultat statique.
 
@@ -151,9 +151,9 @@ Philosophers (concurrence, threads, mutex, synchronisation) et Push_swap (algori
 
 ## Widget de monitoring du homelab
 
-La fiche `/projets/homelab/` inclut `src/components/HomelabMonitoring.astro`. En l’absence d’endpoint configuré, le premier rendu utilise un échantillon explicitement fictif et ne déclenche aucune requête réseau. Cette démonstration d’interface ne correspond pas à une supervision installée sur le homelab ; la mesure et le suivi réels des ressources restent à réaliser. Les types sont dans `src/types/homelab-monitoring.ts`, la validation et les états dans `src/lib/homelab-monitoring.ts`, et les données de démonstration dans `src/data/homelab-monitoring-demo.ts`.
+La fiche `/projets/homelab/` affiche les mesures courantes du nœud Proxmox depuis `/data/homelab-metrics.json`. Un LXC Alpine dédié interroge l’API Proxmox en HTTPS avec validation TLS et un jeton limité à `Sys.Audit` ; `curl` et `jq` extraient CPU, mémoire et stockage `rootfs`. Une tâche cron collecte et publie le JSON minimal toutes les trois minutes par SFTP vers OVHcloud. Le navigateur désactive le cache, valide les quatre champs et marque la mesure périmée à partir de 15 minutes après son horodatage de collecte. En cas de données absentes ou invalides, aucune valeur de secours n’est affichée. Le build statique ne dépend pas de l’endpoint.
 
-Le format JSON, ses limites de confidentialité, les états et les options d’évolution sont documentés dans [`docs/homelab-monitoring.md`](docs/homelab-monitoring.md). La variable optionnelle `PUBLIC_HOMELAB_METRICS_URL` est absente de cette version ; si elle est ajoutée plus tard, elle doit pointer uniquement vers un JSON public en lecture seule, jamais vers Proxmox, Prometheus ou une API privée. Pour désactiver le widget, passer `monitoringEnabled` à `false` dans la fiche homelab ; `monitoringFallback` fournit alors le texte statique de remplacement.
+Le format public, les règles de validation, la péremption et le périmètre limité du widget sont documentés dans [`docs/homelab-monitoring.md`](docs/homelab-monitoring.md). Le fichier public contient `collected_at`, `cpu_percent`, `memory_percent` et `storage_percent` ; le stockage concerne uniquement `rootfs`. Ce monitoring n’inclut pas Prometheus, Grafana, d’historique ni d’alertes et ne constitue pas une observabilité complète. Pour désactiver le widget, passer `monitoringEnabled` à `false` dans la fiche homelab ; `monitoringFallback` conserve une description exacte du système.
 
 Les cas de validation, de mesure manquante, de valeur invalide et de fraîcheur sont vérifiés par :
 
