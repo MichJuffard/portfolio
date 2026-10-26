@@ -33,7 +33,7 @@
     <rect x="552" y="174" width="342" height="145" rx="8" fill="#292841" stroke="#b5b0ff"/>
     <text x="574" y="205" fill="#b5b0ff" font-size="12">LXC NON PRIVILÉGIÉ · ALPINE 3.23</text>
     <text x="574" y="244" fill="#f0f1f7" font-size="23">WireGuard</text>
-    <text x="574" y="272" fill="#b0b6ca" font-size="13">10.77.0.0/24 · OpenRC</text>
+    <text x="574" y="272" fill="#b0b6ca" font-size="13">Réseau VPN privé · OpenRC</text>
     <text x="574" y="296" fill="#b0b6ca" font-size="13">Routage · iptables · NAT</text>
     <rect x="552" y="333" width="164" height="80" rx="6" fill="#1c2930" stroke="#84c7eb"/>
     <text x="568" y="362" fill="#f0f1f7" font-size="15">Interface</text>

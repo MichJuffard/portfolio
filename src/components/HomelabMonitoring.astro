@@ -1,74 +1,54 @@
 ---
-import { homelabMonitoringDemo } from '../data/homelab-monitoring-demo';
 import {
-  formatMonitoringPercent,
-  formatMonitoringTimestamp,
-  isAllowedPublicMetricsEndpoint,
   getMonitoringMetricLabel,
-  getMonitoringScopeLabel,
   getMonitoringStateLabel,
   monitoringMetricNames,
 } from '../lib/homelab-monitoring';
 
-const configuredEndpoint = import.meta.env.PUBLIC_HOMELAB_METRICS_URL?.trim();
-if (configuredEndpoint && !isAllowedPublicMetricsEndpoint(configuredEndpoint)) {
-  throw new Error('PUBLIC_HOMELAB_METRICS_URL must be an HTTPS public JSON URL without credentials or query parameters.');
-}
-const publicEndpoint = configuredEndpoint || undefined;
-const snapshot = publicEndpoint ? null : homelabMonitoringDemo;
-const state = snapshot ? 'demo' : 'unavailable';
-const initialTimestamp = snapshot ? formatMonitoringTimestamp(snapshot.measuredAt) : 'Aucune mesure reçue';
-const note = snapshot
-  ? 'Exemple entièrement fictif. Aucun serveur, collecteur ou service de supervision n’est interrogé.'
-  : 'Aucune mesure n’est incluse dans la page statique. Le chargement de la source publique nécessite JavaScript.';
+const initialState = 'unavailable' as const;
 ---
 
-<section class="monitor-panel" data-monitor-panel data-endpoint={publicEndpoint} aria-labelledby="monitor-title">
+<section class="monitor-panel" data-monitor-panel data-state={initialState} aria-labelledby="monitor-title">
   <header class="monitor-header">
     <div>
-      <p class="eyebrow">SUPERVISION · APERÇU</p>
+      <p class="eyebrow">SUPERVISION DU NŒUD PROXMOX</p>
       <h2 id="monitor-title">État des ressources</h2>
     </div>
-    <span class="monitor-state" data-monitor-state={state} role="status" aria-live="polite">{getMonitoringStateLabel(state)}</span>
+    <span class="monitor-state" data-monitor-state={initialState} role="status" aria-live="polite">{getMonitoringStateLabel(initialState)}</span>
   </header>
 
-  <p class="monitor-note" data-monitor-note>{note}</p>
+  <p class="monitor-note" data-monitor-note>Supervision temporairement indisponible. Aucune mesure n’a encore été reçue.</p>
 
   <dl class="monitor-meta">
     <div>
       <dt>Périmètre</dt>
-      <dd data-monitor-scope>{snapshot ? getMonitoringScopeLabel(snapshot.scope) : 'Non disponible'}</dd>
+      <dd>Nœud Proxmox</dd>
     </div>
     <div>
-      <dt>Dernière mesure</dt>
-      <dd><time data-monitor-time datetime={snapshot?.measuredAt} aria-live="off">{initialTimestamp}</time></dd>
+      <dt>Dernière collecte</dt>
+      <dd><time data-monitor-time aria-live="off">Aucune mesure reçue</time></dd>
     </div>
   </dl>
 
-  <dl class="monitor-metrics" aria-label="Métriques du périmètre sélectionné">
-    {monitoringMetricNames.map(name => {
-      const value = snapshot?.metrics[name] ?? null;
-      const label = name === 'cpuPercent' ? 'CPU' : name === 'memoryPercent' ? 'Mémoire' : 'Stockage';
-      return (
-        <div class="monitor-metric">
-          <dt>{label}</dt>
-          <dd>
-            <span data-monitor-value={name}>{formatMonitoringPercent(value)}</span>
-            <meter
-              data-monitor-meter={name}
-              min="0"
-              max="100"
-              value={value ?? undefined}
-              hidden={value === null}
-              aria-label={`${getMonitoringMetricLabel(name)} — ${snapshot ? getMonitoringScopeLabel(snapshot.scope) : 'périmètre inconnu'}`}
-            ></meter>
-          </dd>
-        </div>
-      );
-    })}
+  <dl class="monitor-metrics" aria-label="Métriques courantes du nœud Proxmox">
+    {monitoringMetricNames.map(name => (
+      <div class="monitor-metric">
+        <dt>{name === 'cpu_percent' ? 'CPU' : name === 'memory_percent' ? 'Mémoire' : 'Stockage système (rootfs)'}</dt>
+        <dd>
+          <span data-monitor-value={name}>Indisponible</span>
+          <meter
+            data-monitor-meter={name}
+            min="0"
+            max="100"
+            hidden
+            aria-label={getMonitoringMetricLabel(name)}
+          ></meter>
+        </dd>
+      </div>
+    ))}
   </dl>
 
-  <p class="monitor-footnote">Les pourcentages sont associés au périmètre indiqué. Aucune adresse, aucun nom interne et aucun détail de service n’est affiché.</p>
+  <p class="monitor-footnote">Les pourcentages proviennent des mesures courantes du nœud Proxmox. Le stockage concerne uniquement son système de fichiers racine (rootfs), pas l’ensemble des disques du homelab.</p>
 </section>
 
 <script>
@@ -77,24 +57,32 @@ const note = snapshot
     formatMonitoringTimestamp,
     getMonitoringFailureState,
     getMonitoringMetricLabel,
-    getMonitoringScopeLabel,
     getMonitoringState,
     getMonitoringStateLabel,
+    MONITORING_MAX_AGE_MS,
     MONITORING_REFRESH_MS,
     monitoringMetricNames,
     validateMonitoringSnapshot,
   } from '../lib/homelab-monitoring';
   import type { MonitoringSnapshot, MonitoringState } from '../types/homelab-monitoring';
 
-  const root = document.querySelector<HTMLElement>('[data-monitor-panel]');
-  const endpoint = root?.dataset.endpoint;
+  const METRICS_ENDPOINT = '/data/homelab-metrics.json';
 
-  if (root && endpoint) {
+  function initializeMonitoring(): void {
+    const root = document.querySelector<HTMLElement>('[data-monitor-panel]');
+    if (!root || root.dataset.monitorInitialized === 'true') return;
+
+    root.dataset.monitorInitialized = 'true';
     const stateElement = root.querySelector<HTMLElement>('[data-monitor-state]');
     const noteElement = root.querySelector<HTMLElement>('[data-monitor-note]');
-    const scopeElement = root.querySelector<HTMLElement>('[data-monitor-scope]');
     const timeElement = root.querySelector<HTMLTimeElement>('[data-monitor-time]');
     let lastSnapshot: MonitoringSnapshot | null = null;
+    let refreshTimer: number | undefined;
+    let staleTimer: number | undefined;
+    let timeoutTimer: number | undefined;
+    let activeRequest: AbortController | null = null;
+    let isRefreshing = false;
+    let disposed = false;
 
     const renderState = (state: MonitoringState) => {
       root.dataset.state = state;
@@ -104,11 +92,14 @@ const note = snapshot
       }
     };
 
-    const renderSnapshot = (snapshot: MonitoringSnapshot | null, state: MonitoringState) => {
+    const renderSnapshot = (
+      snapshot: MonitoringSnapshot | null,
+      state: MonitoringState,
+      showLastKnown = false,
+    ) => {
       renderState(state);
 
       if (!snapshot) {
-        if (scopeElement) scopeElement.textContent = 'Non disponible';
         if (timeElement) {
           timeElement.textContent = 'Aucune mesure reçue';
           timeElement.removeAttribute('datetime');
@@ -117,84 +108,140 @@ const note = snapshot
           const valueElement = root.querySelector<HTMLElement>(`[data-monitor-value="${name}"]`);
           const meter = root.querySelector<HTMLMeterElement>(`[data-monitor-meter="${name}"]`);
           if (valueElement) valueElement.textContent = 'Indisponible';
-          if (meter) {
-            meter.hidden = true;
-            meter.removeAttribute('value');
-          }
+          if (meter) meter.hidden = true;
         }
         return;
       }
 
-      if (scopeElement) scopeElement.textContent = getMonitoringScopeLabel(snapshot.scope);
       if (timeElement) {
-        timeElement.dateTime = snapshot.measuredAt;
-        timeElement.textContent = formatMonitoringTimestamp(snapshot.measuredAt);
+        timeElement.dateTime = snapshot.collected_at;
+        timeElement.textContent = formatMonitoringTimestamp(snapshot.collected_at);
       }
 
       for (const name of monitoringMetricNames) {
-        const value = snapshot.metrics[name];
+        const value = snapshot[name];
         const valueElement = root.querySelector<HTMLElement>(`[data-monitor-value="${name}"]`);
-        let meter = root.querySelector<HTMLMeterElement>(`[data-monitor-meter="${name}"]`);
-        if (valueElement) valueElement.textContent = formatMonitoringPercent(value);
-
-        if (value === null) {
-          if (meter) {
-            meter.hidden = true;
-            meter.removeAttribute('value');
+        const meter = root.querySelector<HTMLMeterElement>(`[data-monitor-meter="${name}"]`);
+        if (valueElement) {
+          const formatted = formatMonitoringPercent(value);
+          valueElement.textContent = state === 'stale'
+            ? `Mesure ancienne : ${formatted}`
+            : showLastKnown
+              ? `Dernière mesure reçue : ${formatted}`
+              : formatted;
+        }
+        if (meter) {
+          meter.hidden = state !== 'available' || showLastKnown;
+          if (state === 'available' && !showLastKnown) {
+            meter.value = value;
+            meter.setAttribute('aria-label', `${getMonitoringMetricLabel(name)} — ${formatMonitoringPercent(value)}`);
           }
-          continue;
         }
+      }
+    };
 
-        if (!meter) {
-          meter = document.createElement('meter');
-          meter.dataset.monitorMeter = name;
-          meter.min = 0;
-          meter.max = 100;
-          valueElement?.parentElement?.append(meter);
+    const clearStaleTimer = () => {
+      if (staleTimer !== undefined) window.clearTimeout(staleTimer);
+      staleTimer = undefined;
+    };
+
+    const scheduleStaleTransition = (snapshot: MonitoringSnapshot) => {
+      clearStaleTimer();
+      if (getMonitoringState(snapshot) !== 'available') return;
+
+      const becomesStaleAt = Date.parse(snapshot.collected_at) + MONITORING_MAX_AGE_MS;
+      staleTimer = window.setTimeout(() => {
+        if (disposed || lastSnapshot !== snapshot) return;
+        const state = getMonitoringState(snapshot);
+        if (state === 'stale') {
+          renderSnapshot(snapshot, state);
+          if (noteElement) noteElement.textContent = 'Cette collecte date de 15 minutes ou plus. Les valeurs affichées ne sont pas actuelles.';
+        } else if (state === 'available') {
+          scheduleStaleTransition(snapshot);
         }
-        meter.value = value;
-        meter.hidden = false;
-        meter.setAttribute('aria-label', `${getMonitoringMetricLabel(name)} — ${getMonitoringScopeLabel(snapshot.scope)}`);
+      }, Math.max(1, becomesStaleAt - Date.now()));
+    };
+
+    const reportRefreshFailure = (message: string) => {
+      const state = getMonitoringFailureState(lastSnapshot);
+      const canShowLastKnown = lastSnapshot !== null && state === 'unavailable';
+      renderSnapshot(lastSnapshot, state, canShowLastKnown);
+
+      if (!noteElement) return;
+      if (message === 'future-timestamp') {
+        noteElement.textContent = lastSnapshot
+          ? 'La source a fourni un horodatage situé dans le futur. La dernière mesure connue est conservée et n’est pas présentée comme actuelle.'
+          : 'Horodatage incohérent : la date de collecte est située dans le futur. Supervision temporairement indisponible.';
+      } else if (!lastSnapshot) {
+        noteElement.textContent = 'Supervision temporairement indisponible. Aucune mesure valide n’a pu être récupérée.';
+      } else if (state === 'stale') {
+        noteElement.textContent = 'La récupération est temporairement indisponible et la dernière collecte date de 15 minutes ou plus. Les valeurs affichées sont anciennes.';
+      } else {
+        noteElement.textContent = 'La récupération a échoué. La dernière mesure connue est indiquée avec son horodatage, mais ne doit pas être considérée comme l’état actuel.';
       }
     };
 
     const refresh = async () => {
-      const controller = new AbortController();
-      const timeout = window.setTimeout(() => controller.abort(), 10_000);
+      if (disposed || isRefreshing) return;
+      isRefreshing = true;
+      activeRequest = new AbortController();
+      timeoutTimer = window.setTimeout(() => activeRequest?.abort(), 10_000);
 
       try {
-        const response = await fetch(endpoint, {
+        const response = await fetch(METRICS_ENDPOINT, {
           headers: { Accept: 'application/json' },
           cache: 'no-store',
-          signal: controller.signal,
+          signal: activeRequest.signal,
         });
-        if (!response.ok) throw new Error('La source publique n’a pas répondu correctement.');
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const result = validateMonitoringSnapshot(await response.json());
         if (!result.ok) throw new Error(result.reason);
 
+        const state = getMonitoringState(result.snapshot);
+        if (state === 'unavailable') throw new Error('future-timestamp');
+
         lastSnapshot = result.snapshot;
-        const state = getMonitoringState(lastSnapshot);
         renderSnapshot(lastSnapshot, state);
+        scheduleStaleTransition(lastSnapshot);
         if (noteElement) {
-          noteElement.textContent = state === 'unavailable'
-            ? 'La source a répondu, mais aucune métrique exploitable n’est disponible.'
-            : 'Mesures reçues depuis une source JSON publique. Elles ne permettent pas de conclure à la disponibilité des services.';
+          noteElement.textContent = state === 'stale'
+            ? 'La source est accessible, mais sa dernière collecte date de 15 minutes ou plus. Les valeurs ne sont pas actuelles.'
+            : 'Mesures courantes reçues depuis le JSON public. Le widget ne vérifie pas la disponibilité des services.';
         }
-      } catch {
-        const state = getMonitoringFailureState(lastSnapshot);
-        renderSnapshot(lastSnapshot, state);
-        if (noteElement) {
-          noteElement.textContent = lastSnapshot
-            ? 'La récupération a échoué. Les valeurs affichées proviennent de la dernière mesure valide reçue.'
-            : 'Récupération impossible : aucune mesure publique exploitable n’a été reçue.';
-        }
+      } catch (error) {
+        if (disposed) return;
+        const message = error instanceof Error && error.message === 'future-timestamp'
+          ? 'future-timestamp'
+          : 'request-failed';
+        reportRefreshFailure(message);
       } finally {
-        window.clearTimeout(timeout);
+        if (timeoutTimer !== undefined) window.clearTimeout(timeoutTimer);
+        timeoutTimer = undefined;
+        activeRequest = null;
+        isRefreshing = false;
       }
     };
 
+    const dispose = () => {
+      if (disposed) return;
+      disposed = true;
+      if (refreshTimer !== undefined) window.clearInterval(refreshTimer);
+      clearStaleTimer();
+      if (timeoutTimer !== undefined) window.clearTimeout(timeoutTimer);
+      activeRequest?.abort();
+      delete root.dataset.monitorInitialized;
+      window.removeEventListener('pagehide', dispose);
+      document.removeEventListener('astro:before-swap', dispose);
+    };
+
+    window.addEventListener('pagehide', dispose, { once: true });
+    document.addEventListener('astro:before-swap', dispose, { once: true });
     void refresh();
-    window.setInterval(() => void refresh(), MONITORING_REFRESH_MS);
+    refreshTimer = window.setInterval(() => void refresh(), MONITORING_REFRESH_MS);
   }
+
+  initializeMonitoring();
+  document.addEventListener('astro:page-load', initializeMonitoring);
+  window.addEventListener('pageshow', initializeMonitoring);
 </script>

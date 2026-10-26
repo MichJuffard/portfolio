@@ -1,177 +1,93 @@
+import { monitoringMetricNames } from '../types/homelab-monitoring.ts';
 import type {
   MonitoringMetricName,
-  MonitoringMetrics,
-  MonitoringScope,
   MonitoringSnapshot,
   MonitoringState,
-  SnapshotValidation,
 } from '../types/homelab-monitoring';
 
-const monitoringScopes: MonitoringScope[] = ['proxmox-host', 'vm'];
-
-export const monitoringMetricNames: MonitoringMetricName[] = [
-  'cpuPercent',
-  'memoryPercent',
-  'storagePercent',
-];
+export { monitoringMetricNames } from '../types/homelab-monitoring.ts';
 
 export const MONITORING_REFRESH_MS = 3 * 60 * 1000;
-export const MONITORING_MAX_AGE_MS = 10 * 60 * 1000;
-const FUTURE_CLOCK_TOLERANCE_MS = 60 * 1000;
+export const MONITORING_MAX_AGE_MS = 15 * 60 * 1000;
 
 const metricLabels: Record<MonitoringMetricName, string> = {
-  cpuPercent: 'Utilisation CPU',
-  memoryPercent: 'Utilisation mémoire',
-  storagePercent: 'Utilisation du stockage',
-};
-
-const scopeLabels: Record<MonitoringScope, string> = {
-  'proxmox-host': 'Hôte Proxmox',
-  vm: 'Machine virtuelle (sans nom)',
+  cpu_percent: 'Utilisation CPU',
+  memory_percent: 'Utilisation mémoire',
+  storage_percent: 'Utilisation du stockage système rootfs',
 };
 
 const stateLabels: Record<MonitoringState, string> = {
-  demo: 'Démo — données fictives',
-  available: 'Disponible',
-  stale: 'Données anciennes',
-  unavailable: 'Indisponible',
+  available: 'Mesures disponibles',
+  stale: 'Données périmées',
+  unavailable: 'Supervision temporairement indisponible',
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function containsOnlyKeys(value: Record<string, unknown>, allowed: string[]): boolean {
-  return Object.keys(value).every(key => allowed.includes(key));
+function hasExactlyKeys(value: Record<string, unknown>, expected: string[]): boolean {
+  const keys = Object.keys(value);
+  return keys.length === expected.length && expected.every(key => Object.hasOwn(value, key));
 }
 
 function isIsoUtcTimestamp(value: unknown): value is string {
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/.test(value)) {
-    return false;
-  }
+  if (typeof value !== 'string') return false;
 
+  const match = value.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,3}))?Z$/);
+  if (!match) return false;
+
+  const milliseconds = (match[2] ?? '').padEnd(3, '0');
+  const normalized = `${match[1]}.${milliseconds}Z`;
   const parsed = new Date(value);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString() === value;
+  return Number.isFinite(parsed.getTime()) && parsed.toISOString() === normalized;
 }
 
-export function validateMonitoringSnapshot(value: unknown): SnapshotValidation {
-  if (!isRecord(value) || !containsOnlyKeys(value, ['schemaVersion', 'measuredAt', 'scope', 'metrics'])) {
-    return { ok: false, reason: 'La structure racine contient des champs inattendus ou est invalide.' };
+export function validateMonitoringSnapshot(value: unknown):
+  | { ok: true; snapshot: MonitoringSnapshot }
+  | { ok: false; reason: string } {
+  const expectedKeys = ['collected_at', ...monitoringMetricNames];
+  if (!isRecord(value) || !hasExactlyKeys(value, expectedKeys)) {
+    return { ok: false, reason: 'Le JSON doit contenir exactement collected_at et les trois pourcentages attendus.' };
   }
 
-  if (value.schemaVersion !== 1) {
-    return { ok: false, reason: 'La version du format n’est pas prise en charge.' };
+  if (!isIsoUtcTimestamp(value.collected_at)) {
+    return { ok: false, reason: 'La date de collecte doit être un horodatage ISO 8601 valide en UTC.' };
   }
-  if (!isIsoUtcTimestamp(value.measuredAt)) {
-    return { ok: false, reason: 'La date doit être un horodatage ISO 8601 en UTC.' };
-  }
-  if (typeof value.scope !== 'string' || !monitoringScopes.includes(value.scope as MonitoringScope)) {
-    return { ok: false, reason: 'Le périmètre de la mesure n’est pas reconnu.' };
-  }
-  if (!isRecord(value.metrics) || !containsOnlyKeys(value.metrics, monitoringMetricNames)) {
-    return { ok: false, reason: 'Les métriques contiennent des champs inattendus ou sont invalides.' };
-  }
-
-  const normalized: MonitoringMetrics = {
-    cpuPercent: null,
-    memoryPercent: null,
-    storagePercent: null,
-  };
 
   for (const name of monitoringMetricNames) {
-    if (!(name in value.metrics)) continue;
-
-    const metric = value.metrics[name];
-    if (metric === null) continue;
+    const metric = value[name];
     if (typeof metric !== 'number' || !Number.isFinite(metric) || metric < 0 || metric > 100) {
-      return { ok: false, reason: `La valeur ${name} doit être un pourcentage entre 0 et 100, ou null.` };
+      return { ok: false, reason: `${name} doit être un nombre fini entre 0 et 100.` };
     }
-    normalized[name] = metric;
   }
 
   return {
     ok: true,
     snapshot: {
-      schemaVersion: 1,
-      measuredAt: value.measuredAt,
-      scope: value.scope as MonitoringScope,
-      metrics: normalized,
+      collected_at: value.collected_at,
+      cpu_percent: value.cpu_percent as number,
+      memory_percent: value.memory_percent as number,
+      storage_percent: value.storage_percent as number,
     },
   };
-}
-
-export function isAllowedPublicMetricsEndpoint(value: string): boolean {
-  if (!value || value !== value.trim() || value.includes('\\')) return false;
-
-  const isSameOriginPath = value.startsWith('/') && !value.startsWith('//');
-  let url: URL;
-  try {
-    url = new URL(value, 'https://portfolio.invalid');
-  } catch {
-    return false;
-  }
-
-  if (!url.pathname.toLowerCase().endsWith('.json') || url.search || url.hash || url.username || url.password) {
-    return false;
-  }
-  if (isSameOriginPath) return true;
-  if (url.protocol !== 'https:') return false;
-
-  const host = url.hostname.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '');
-  if (
-    host === 'localhost' ||
-    host === 'localhost.localdomain' ||
-    host.endsWith('.local') ||
-    host.endsWith('.lan') ||
-    host.endsWith('.internal') ||
-    host.endsWith('.home.arpa')
-  ) return false;
-
-  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
-  if (ipv4) {
-    const [first, second, third, fourth] = ipv4.slice(1).map(Number);
-    if ([first, second, third, fourth].some(octet => octet > 255)) return false;
-    if (
-      first === 0 || first === 10 || first === 127 || first >= 224 ||
-      (first === 100 && second >= 64 && second <= 127) ||
-      (first === 169 && second === 254) ||
-      (first === 172 && second >= 16 && second <= 31) ||
-      (first === 192 && second === 168) ||
-      (first === 192 && second === 0 && third === 0) ||
-      (first === 198 && (second === 18 || second === 19 || second === 51 && third === 100)) ||
-      (first === 203 && second === 0 && third === 113)
-    ) return false;
-  }
-
-  if (host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80:') || host.startsWith('::ffff:')) {
-    return false;
-  }
-  return host.includes('.') || host.includes(':');
 }
 
 export function getMonitoringState(
   snapshot: MonitoringSnapshot | null,
   now = Date.now(),
   maxAgeMs = MONITORING_MAX_AGE_MS,
-): Exclude<MonitoringState, 'demo'> {
-  if (!snapshot || !monitoringMetricNames.some(name => snapshot.metrics[name] !== null)) {
-    return 'unavailable';
-  }
+): MonitoringState {
+  if (!snapshot) return 'unavailable';
 
-  const measuredAt = Date.parse(snapshot.measuredAt);
-  if (!Number.isFinite(measuredAt) || measuredAt > now + FUTURE_CLOCK_TOLERANCE_MS) {
-    return 'unavailable';
-  }
-  return now - measuredAt > maxAgeMs ? 'stale' : 'available';
+  const collectedAt = Date.parse(snapshot.collected_at);
+  if (!Number.isFinite(collectedAt) || collectedAt > now) return 'unavailable';
+  return now - collectedAt >= maxAgeMs ? 'stale' : 'available';
 }
 
-export function getMonitoringFailureState(snapshot: MonitoringSnapshot | null, now = Date.now()): Exclude<MonitoringState, 'demo'> {
+export function getMonitoringFailureState(snapshot: MonitoringSnapshot | null, now = Date.now()): MonitoringState {
   if (!snapshot) return 'unavailable';
   return getMonitoringState(snapshot, now) === 'stale' ? 'stale' : 'unavailable';
-}
-
-export function getMonitoringScopeLabel(scope: MonitoringScope): string {
-  return scopeLabels[scope];
 }
 
 export function getMonitoringMetricLabel(name: MonitoringMetricName): string {
@@ -182,8 +98,7 @@ export function getMonitoringStateLabel(state: MonitoringState): string {
   return stateLabels[state];
 }
 
-export function formatMonitoringPercent(value: number | null): string {
-  if (value === null) return 'Indisponible';
+export function formatMonitoringPercent(value: number): string {
   return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(value)} %`;
 }
 

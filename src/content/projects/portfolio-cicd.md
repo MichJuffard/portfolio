@@ -48,6 +48,6 @@ Ce projet me fait travailler les étapes d’une livraison : protéger les infor
 - définir une suppression maîtrisée des anciens fichiers distants ;
 - mettre en place un déploiement atomique et une stratégie de retour arrière ;
 - migrer à court terme l’hébergement vers le homelab administré avec Proxmox ;
-- installer et valider une supervision réelle du portfolio depuis le homelab.
+- mettre en place une vérification de disponibilité du portfolio, distincte du suivi des ressources du nœud Proxmox.
 
-Le widget de monitoring présenté dans la fiche homelab est une démonstration avec des données fictives : il ne supervise pas encore le portfolio ni le homelab en production.
+Le widget de la fiche homelab affiche désormais les mesures courantes CPU, mémoire et stockage rootfs du nœud Proxmox. Il ne vérifie pas la disponibilité du portfolio ni celle des services hébergés.

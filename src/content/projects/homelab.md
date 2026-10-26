@@ -4,7 +4,7 @@ summary: "Un serveur réutilisé, Proxmox et un VPN WireGuard opérationnel dans
 status: "en cours"
 category: "Personnel"
 monitoringEnabled: true
-monitoringFallback: "Aucun suivi réel de l’utilisation des ressources n’est encore installé. La mesure et la supervision du homelab restent à réaliser."
+monitoringFallback: "Un LXC Alpine dédié publie les mesures courantes CPU, mémoire et rootfs du nœud Proxmox. La collecte et le transfert SFTP vers OVHcloud s’exécutent toutes les trois minutes."
 featured: true
 featuredOrder: 3
 featuredTitle: "Homelab · VPN WireGuard"
@@ -39,7 +39,7 @@ Je voulais administrer Proxmox depuis l’extérieur sans exposer directement so
 - **LXC plutôt qu’une VM complète :** le VPN est un service léger qui doit rester disponible. Un conteneur consomme moins de ressources qu’une machine virtuelle dédiée dans ce serveur limité.
 - **Alpine Linux plutôt que Debian pour le VPN :** son empreinte réduite convient à ce service ciblé. La VM Debian reste disponible séparément pour apprendre sur un système plus généraliste.
 - **WireGuard natif plutôt que Tailscale :** ce choix privilégie les logiciels libres, limite les dépendances à des services externes et permet de comprendre soi-même les pairs, les routes et le filtrage réseau.
-- **Un réseau VPN séparé du LAN :** le sous-réseau privé `10.77.0.0/24` est routé explicitement. Le transfert IPv4, les règles iptables et le NAT/MASQUERADE définissent le chemin entre le tunnel et l’interface Proxmox.
+- **Un réseau VPN séparé du LAN :** le sous-réseau privé du tunnel est routé explicitement. Le transfert IPv4, les règles iptables et le NAT/MASQUERADE définissent le chemin entre le tunnel et l’interface Proxmox.
 
 ### Mise en place
 
@@ -59,6 +59,14 @@ Le filtrage réseau mérite encore un durcissement plus complet. Les sauvegardes
 
 Une VM Debian 13 distincte existe sur Proxmox. Elle sert de base aux apprentissages Linux et pourra accueillir les expériences Docker et DevOps. Je la démarre à la demande : elle peut rester arrêtée sans couper le VPN, ce qui réserve les ressources du serveur au service qui doit rester disponible.
 
+## Monitoring courant du nœud Proxmox
+
+Un LXC dédié sous Alpine Linux 3.23 collecte les mesures du nœud Proxmox via son API HTTPS, avec vérification du certificat TLS et un jeton limité au droit de lecture `Sys.Audit`. Un script shell utilise `curl` et `jq` pour extraire l’utilisation CPU, mémoire et stockage du système de fichiers racine (`rootfs`).
+
+Une tâche cron lance la collecte et la publication toutes les trois minutes. Le LXC transfère un JSON public minimal en SFTP vers l’hébergement OVHcloud actuel. Le widget lit uniquement ce fichier et marque les données comme périmées lorsque l’horodatage de collecte atteint 15 minutes ; il ne contacte jamais directement Proxmox. La valeur rootfs décrit le stockage système du nœud, pas l’ensemble des disques du homelab.
+
+Ce dispositif affiche uniquement des mesures courantes du nœud. Il n’inclut pas Prometheus, Grafana, de stockage historique ni de système d’alertes, et ne constitue pas une plateforme complète d’observabilité. Le portfolio reste hébergé chez OVHcloud ; sa migration vers le homelab est toujours prévue et n’a pas été réalisée.
+
 ## Diagnostic réseau : du symptôme à la résolution
 
 Lors de la mise en place initiale, Proxmox était relié en Ethernet à un répéteur Wi-Fi Free lui-même connecté à la Freebox. Proxmox ne joignait pas correctement sa passerelle. Les vérifications ARP et les tests de connectivité ont permis de localiser le problème sur la liaison ou l’association du répéteur avec la Freebox, et non sur le câble Ethernet du serveur. La configuration du répéteur depuis Freebox Connect a rétabli la communication.
@@ -76,7 +84,6 @@ Ces éléments ne sont pas encore réalisés :
 - durcir plus complètement les règles de filtrage réseau ;
 - mettre en place un DNS dynamique pour l’accès distant ;
 - définir et tester la sauvegarde et la restauration du conteneur VPN ;
-- mesurer et suivre l’utilisation des ressources du serveur ;
 - étudier Nextcloud pour les fichiers et photos personnels, avec une stratégie de stockage et de sauvegarde adaptée ;
-- expérimenter Docker, un reverse proxy, le monitoring et l’automatisation dans la VM Debian ;
+- expérimenter Docker, un reverse proxy et l’automatisation dans la VM Debian ;
 - éventuellement étendre le VPN à d’autres machines et utilisateurs en adaptant les routes et les règles de filtrage.
