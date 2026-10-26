@@ -2,6 +2,22 @@ import { defineConfig } from 'astro/config';
 
 export default defineConfig({
   output: 'static',
+  vite: {
+    server: {
+      proxy: {
+        '/data/homelab-inventory.json': {
+          target: 'https://mjuffard.fr',
+          changeOrigin: true,
+          secure: true,
+        },
+        '/data/homelab-metrics.json': {
+          target: 'https://mjuffard.fr',
+          changeOrigin: true,
+          secure: true,
+        },
+      },
+    },
+  },
   redirects: {
     '/homelab/': '/projets/homelab/',
     '/projets/proxmox/': '/projets/homelab/#proxmox',

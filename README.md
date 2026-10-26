@@ -19,6 +19,8 @@ npm run dev
 
 Ouvrir l’adresse affichée par Astro, généralement `http://localhost:4321`.
 
+En développement, Vite relaie `/data/homelab-inventory.json` et `/data/homelab-metrics.json` vers `https://mjuffard.fr`. Les composants gardent leurs URL relatives, identiques en développement et en production. Ces JSON sont produits sur le homelab et transférés directement par SFTP vers OVHcloud ; ils ne sont ni versionnés dans Git ni inclus dans `public/` ou `dist/`.
+
 ```sh
 npm run check
 npm run build
