@@ -3,87 +3,72 @@ import test from 'node:test';
 import {
   getMonitoringFailureState,
   getMonitoringState,
-  isAllowedPublicMetricsEndpoint,
+  MONITORING_MAX_AGE_MS,
   validateMonitoringSnapshot,
 } from '../src/lib/homelab-monitoring.ts';
 
-const measuredAt = '2026-10-21T08:30:00.000Z';
+// Synthetic test fixture only; these values are never included in the site.
+const collectedAt = '2026-01-02T03:04:05Z';
 const validSnapshot = {
-  schemaVersion: 1,
-  measuredAt,
-  scope: 'proxmox-host',
-  metrics: {
-    cpuPercent: 18.4,
-    memoryPercent: 62.1,
-    storagePercent: 41.7,
-  },
+  collected_at: collectedAt,
+  cpu_percent: 12.3,
+  memory_percent: 45.6,
+  storage_percent: 78.9,
 };
 
-test('validates the documented public JSON shape', () => {
+test('validates the four-field public JSON format', () => {
   const result = validateMonitoringSnapshot(validSnapshot);
   assert.equal(result.ok, true);
-  if (result.ok) assert.equal(result.snapshot.metrics.cpuPercent, 18.4);
+  if (result.ok) assert.deepEqual(result.snapshot, validSnapshot);
 });
 
-test('keeps missing and null metrics unavailable instead of converting them to zero', () => {
-  const result = validateMonitoringSnapshot({
-    ...validSnapshot,
-    metrics: { cpuPercent: null },
-  });
-  assert.equal(result.ok, true);
-  if (result.ok) {
-    assert.deepEqual(result.snapshot.metrics, {
-      cpuPercent: null,
-      memoryPercent: null,
-      storagePercent: null,
-    });
-    assert.equal(getMonitoringState(result.snapshot, Date.parse(measuredAt)), 'unavailable');
+test('rejects missing, extra, or non-object fields', () => {
+  const { storage_percent, ...withoutStorage } = validSnapshot;
+  assert.equal(validateMonitoringSnapshot(withoutStorage).ok, false);
+  assert.equal(validateMonitoringSnapshot({ ...validSnapshot, hostname: 'private-host' }).ok, false);
+  assert.equal(validateMonitoringSnapshot(null).ok, false);
+  assert.equal(validateMonitoringSnapshot([]).ok, false);
+});
+
+test('rejects invalid, non-UTC, or impossible collection timestamps', () => {
+  for (const collected_at of [
+    'not-a-date',
+    '2026-01-02T03:04:05+01:00',
+    '2026-02-30T03:04:05Z',
+    '2026-01-02T03:04:05.1234Z',
+  ]) {
+    assert.equal(validateMonitoringSnapshot({ ...validSnapshot, collected_at }).ok, false, collected_at);
   }
 });
 
-test('rejects extra fields that could expose identifying metadata', () => {
-  const result = validateMonitoringSnapshot({
-    ...validSnapshot,
-    hostname: 'private-host',
-  });
-  assert.equal(result.ok, false);
+test('rejects non-numeric, non-finite, and out-of-range percentages', () => {
+  for (const name of ['cpu_percent', 'memory_percent', 'storage_percent']) {
+    for (const value of [null, '12', Number.NaN, Number.POSITIVE_INFINITY, -0.1, 100.1]) {
+      assert.equal(validateMonitoringSnapshot({ ...validSnapshot, [name]: value }).ok, false, `${name}: ${value}`);
+    }
+  }
 });
 
-test('rejects unknown scopes, invalid dates, and out-of-range percentages', () => {
-  assert.equal(validateMonitoringSnapshot({ ...validSnapshot, scope: 'named-vm' }).ok, false);
-  assert.equal(validateMonitoringSnapshot({ ...validSnapshot, measuredAt: 'yesterday' }).ok, false);
-  assert.equal(validateMonitoringSnapshot({
-    ...validSnapshot,
-    metrics: { ...validSnapshot.metrics, cpuPercent: 100.1 },
-  }).ok, false);
-});
-
-test('allows only public HTTPS or same-origin JSON endpoints without embedded credentials', () => {
-  assert.equal(isAllowedPublicMetricsEndpoint('/data/homelab-metrics.json'), true);
-  assert.equal(isAllowedPublicMetricsEndpoint('https://metrics.example.org/public/latest.json'), true);
-  assert.equal(isAllowedPublicMetricsEndpoint('http://metrics.example.org/latest.json'), false);
-  assert.equal(isAllowedPublicMetricsEndpoint('https://192.168.1.20/metrics.json'), false);
-  assert.equal(isAllowedPublicMetricsEndpoint('https://user:token@metrics.example.org/metrics.json'), false);
-  assert.equal(isAllowedPublicMetricsEndpoint('https://metrics.example.org/api'), false);
-});
-
-test('classifies recent, stale, and future measurements explicitly', () => {
+test('uses collected_at and marks a measurement stale at exactly fifteen minutes', () => {
   const parsed = validateMonitoringSnapshot(validSnapshot);
   assert.equal(parsed.ok, true);
   if (!parsed.ok) return;
 
-  assert.equal(getMonitoringState(parsed.snapshot, Date.parse(measuredAt) + 9 * 60 * 1000), 'available');
-  assert.equal(getMonitoringState(parsed.snapshot, Date.parse(measuredAt) + 11 * 60 * 1000), 'stale');
-  assert.equal(getMonitoringState(parsed.snapshot, Date.parse(measuredAt) - 2 * 60 * 1000), 'unavailable');
+  const collectedAtMs = Date.parse(collectedAt);
+  assert.equal(getMonitoringState(parsed.snapshot, collectedAtMs + MONITORING_MAX_AGE_MS - 1), 'available');
+  assert.equal(getMonitoringState(parsed.snapshot, collectedAtMs + MONITORING_MAX_AGE_MS), 'stale');
+  assert.equal(getMonitoringState(parsed.snapshot, collectedAtMs + MONITORING_MAX_AGE_MS + 1), 'stale');
+});
+
+test('treats future timestamps as unavailable and failures preserve only stale status', () => {
+  const parsed = validateMonitoringSnapshot(validSnapshot);
+  assert.equal(parsed.ok, true);
+  if (!parsed.ok) return;
+
+  const collectedAtMs = Date.parse(collectedAt);
+  assert.equal(getMonitoringState(parsed.snapshot, collectedAtMs - 1), 'unavailable');
   assert.equal(getMonitoringState(null), 'unavailable');
-});
-
-test('a failed refresh reports unavailable without a usable cached sample and preserves stale state otherwise', () => {
-  const parsed = validateMonitoringSnapshot(validSnapshot);
-  assert.equal(parsed.ok, true);
-  if (!parsed.ok) return;
-
   assert.equal(getMonitoringFailureState(null), 'unavailable');
-  assert.equal(getMonitoringFailureState(parsed.snapshot, Date.parse(measuredAt) + 5 * 60 * 1000), 'unavailable');
-  assert.equal(getMonitoringFailureState(parsed.snapshot, Date.parse(measuredAt) + 11 * 60 * 1000), 'stale');
+  assert.equal(getMonitoringFailureState(parsed.snapshot, collectedAtMs + 5 * 60 * 1000), 'unavailable');
+  assert.equal(getMonitoringFailureState(parsed.snapshot, collectedAtMs + MONITORING_MAX_AGE_MS), 'stale');
 });
