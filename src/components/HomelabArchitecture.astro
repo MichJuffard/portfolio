@@ -1,44 +1,232 @@
-<figure class="homelab-architecture" aria-labelledby="homelab-architecture-caption">
-  <figcaption id="homelab-architecture-caption">Architecture du VPN actuellement testée</figcaption>
-  <div class="homelab-flow">
-    <div class="homelab-flow-node homelab-client">
-      <span>Client distant</span>
-      <strong>Mac · réseau mobile</strong>
-      <small>Pair WireGuard</small>
+<figure class="homelab-architecture" data-homelab-architecture aria-labelledby="homelab-architecture-title">
+  <figcaption id="homelab-architecture-title">Architecture publique des environnements Proxmox</figcaption>
+  <p class="architecture-state" data-inventory-state role="status" aria-live="polite">Chargement de l’inventaire public…</p>
+  <noscript><p class="architecture-note">JavaScript doit être activé pour lire l’inventaire public dynamique.</p></noscript>
+
+  <div class="architecture-visual">
+    <div class="architecture-host">
+      <span>Nœud d’hébergement</span>
+      <strong>Proxmox</strong>
     </div>
-    <div class="homelab-flow-link" aria-hidden="true"><span>↓</span><small>Tunnel chiffré</small></div>
-    <div class="homelab-flow-node homelab-router">
-      <span>Accès Internet</span>
-      <strong>Freebox</strong>
-      <small>Un port UDP redirigé vers le conteneur VPN</small>
+    <div class="architecture-hosting-link" aria-hidden="true">
+      <span class="architecture-link-arrow">↓</span>
+      <span>héberge</span>
     </div>
-    <div class="homelab-flow-link" aria-hidden="true"><span>↓</span><small>Bridge Proxmox vmbr0</small></div>
-    <section class="homelab-flow-node homelab-host" aria-label="Environnements hébergés sur Proxmox">
-      <header>
-        <span>Serveur physique · tour ASUS réutilisée</span>
-        <strong>Proxmox VE 9.2</strong>
-      </header>
-      <div class="homelab-host-grid">
-        <div class="homelab-service homelab-vpn">
-          <span>LXC non privilégié</span>
-          <strong>Alpine Linux 3.23 · WireGuard</strong>
-          <small>Réseau VPN privé · WireGuard</small>
-          <small>Transfert IPv4 · iptables · NAT/MASQUERADE</small>
-          <small>Pare-feu IPv6 · services OpenRC</small>
-        </div>
-        <div class="homelab-service homelab-admin">
-          <span>Accessible à travers le tunnel</span>
-          <strong>Administration Proxmox</strong>
-          <small>Interface non exposée directement sur Internet</small>
-        </div>
-        <div class="homelab-service homelab-debian">
-          <span>Environnement séparé · facultatif</span>
-          <strong>VM Debian 13</strong>
-          <small>Arrêtée en dehors des expérimentations Linux, Docker et DevOps</small>
-          <small>Non requise pour le fonctionnement du VPN</small>
-        </div>
-      </div>
-    </section>
+    <ul class="architecture-services" data-inventory-services aria-label="Environnements publics hébergés sur Proxmox"></ul>
   </div>
-  <p class="homelab-diagram-note">Schéma fonctionnel : il ne détaille ni les adresses du LAN domestique ni les informations d’accès.</p>
+
+  <dl class="architecture-meta">
+    <div>
+      <dt>Dernière collecte</dt>
+      <dd><time data-inventory-time>Aucune collecte reçue</time></dd>
+    </div>
+  </dl>
+  <p class="architecture-note" data-inventory-note>
+    Seuls les environnements explicitement autorisés sont publiés. Ce schéma décrit leur hébergement logique ; il ne représente pas les connexions réseau.
+  </p>
 </figure>
+
+<script>
+  import { getHomelabServiceViews } from '../data/homelab-service-descriptions';
+  import {
+    getHomelabInventoryFreshness,
+    HOMELAB_INVENTORY_MAX_AGE_MS,
+    HOMELAB_INVENTORY_REFRESH_MS,
+    loadHomelabInventory,
+  } from '../lib/homelab-inventory';
+  import type { HomelabInventory, HomelabInventoryFreshness } from '../types/homelab-inventory';
+
+  type DisplayMode = 'normal' | 'unavailable' | 'inconsistent';
+
+  function formatCollectionTime(value: string): string {
+    const formatted = new Intl.DateTimeFormat('fr-FR', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'UTC',
+    }).format(new Date(value));
+    return `${formatted} UTC`;
+  }
+
+  function initializeArchitecture(): void {
+    const root = document.querySelector<HTMLElement>('[data-homelab-architecture]');
+    if (!root || root.dataset.inventoryInitialized === 'true') return;
+
+    const stateElement = root.querySelector<HTMLElement>('[data-inventory-state]');
+    const noteElement = root.querySelector<HTMLElement>('[data-inventory-note]');
+    const timeElement = root.querySelector<HTMLTimeElement>('[data-inventory-time]');
+    const servicesElement = root.querySelector<HTMLUListElement>('[data-inventory-services]');
+    if (!stateElement || !servicesElement || !timeElement) return;
+
+    root.dataset.inventoryInitialized = 'true';
+    let lastSnapshot: HomelabInventory | null = null;
+    let refreshTimer: number | undefined;
+    let freshnessTimer: number | undefined;
+    let requestTimer: number | undefined;
+    let activeRequest: AbortController | null = null;
+    let isRefreshing = false;
+    let disposed = false;
+    let displayMode: DisplayMode = 'normal';
+
+    const renderCollectionTime = (snapshot: HomelabInventory | null) => {
+      if (snapshot) {
+        timeElement.dateTime = snapshot.collected_at;
+        timeElement.textContent = formatCollectionTime(snapshot.collected_at);
+      } else {
+        timeElement.removeAttribute('datetime');
+        timeElement.textContent = 'Aucune collecte reçue';
+      }
+    };
+
+    const renderServices = (snapshot: HomelabInventory | null, unverified = false) => {
+      servicesElement.replaceChildren();
+      if (!snapshot) return;
+
+      for (const service of getHomelabServiceViews(snapshot.services)) {
+        const item = document.createElement('li');
+        item.className = 'architecture-service';
+        const card = document.createElement('article');
+        card.className = 'architecture-service-card';
+
+        const type = document.createElement('span');
+        type.className = 'architecture-service-type';
+        type.textContent = service.typeLabel;
+
+        const name = document.createElement('h3');
+        name.textContent = service.name;
+
+        const description = document.createElement('p');
+        description.className = 'architecture-service-description';
+        description.textContent = service.description;
+
+        const status = document.createElement('p');
+        status.className = 'architecture-service-status';
+        status.dataset.serviceStatus = unverified ? 'unverified' : service.status;
+        status.textContent = unverified
+          ? `État non vérifié · dernière valeur : ${service.statusLabel}`
+          : service.statusLabel;
+
+        card.append(type, name, description, status);
+        if (service.note) {
+          const note = document.createElement('p');
+          note.className = 'architecture-service-note';
+          note.textContent = service.note;
+          card.append(note);
+        }
+        item.append(card);
+        servicesElement.append(item);
+      }
+    };
+
+    const renderSnapshot = (snapshot: HomelabInventory, freshness: HomelabInventoryFreshness) => {
+      displayMode = 'normal';
+      root.dataset.inventoryState = freshness;
+      renderCollectionTime(snapshot);
+      renderServices(snapshot, freshness === 'stale');
+
+      if (freshness === 'stale') {
+        stateElement.textContent = 'Dernières données anciennes';
+        if (noteElement) {
+          noteElement.textContent = 'Cette collecte date de 15 minutes ou plus. La liste et ses états ne confirment ni les autorisations ni la situation actuelles.';
+        }
+      } else if (snapshot.services.length === 0) {
+        stateElement.textContent = 'Aucun environnement public dans l’inventaire';
+        if (noteElement) noteElement.textContent = 'La dernière collecte valide ne contient aucun environnement autorisé à être présenté.';
+      } else {
+        stateElement.textContent = 'Architecture à jour';
+        if (noteElement) {
+          noteElement.textContent = 'Les cartes reprennent le nom, le type et l’état du JSON public. Les descriptions pédagogiques sont ajoutées localement lorsqu’elles sont connues.';
+        }
+      }
+    };
+
+    const renderFailure = (reason: 'unavailable' | 'invalid' | 'future-timestamp') => {
+      displayMode = reason === 'future-timestamp' ? 'inconsistent' : 'unavailable';
+      root.dataset.inventoryState = displayMode;
+      renderCollectionTime(lastSnapshot);
+      renderServices(lastSnapshot, true);
+
+      if (reason === 'future-timestamp') {
+        stateElement.textContent = 'Horodatage incohérent';
+        if (noteElement) {
+          noteElement.textContent = lastSnapshot
+            ? 'La source annonce une collecte située dans le futur. Les cartes éventuelles reprennent la dernière collecte vérifiée et ne sont pas présentées comme actuelles.'
+            : 'La date de collecte annoncée est située dans le futur ; l’inventaire ne peut pas être considéré comme actuel.';
+        }
+      } else {
+        stateElement.textContent = 'Architecture temporairement indisponible';
+        if (noteElement) {
+          noteElement.textContent = lastSnapshot
+            ? 'La dernière lecture a échoué. Les cartes éventuelles reprennent la collecte précédente ; leur état et leur autorisation actuelle ne sont pas vérifiés.'
+            : 'Aucune donnée valide n’a pu être récupérée depuis l’inventaire public.';
+        }
+      }
+    };
+
+    const clearFreshnessTimer = () => {
+      if (freshnessTimer !== undefined) window.clearTimeout(freshnessTimer);
+      freshnessTimer = undefined;
+    };
+
+    const scheduleFreshnessUpdate = (snapshot: HomelabInventory) => {
+      clearFreshnessTimer();
+      if (getHomelabInventoryFreshness(snapshot) !== 'current') return;
+
+      const becomesStaleAt = Date.parse(snapshot.collected_at) + HOMELAB_INVENTORY_MAX_AGE_MS;
+      freshnessTimer = window.setTimeout(() => {
+        if (disposed || lastSnapshot !== snapshot || displayMode !== 'normal') return;
+        const freshness = getHomelabInventoryFreshness(snapshot);
+        if (freshness === 'stale') renderSnapshot(snapshot, freshness);
+        else if (freshness === 'current') scheduleFreshnessUpdate(snapshot);
+      }, Math.max(1, becomesStaleAt - Date.now()));
+    };
+
+    const refresh = async () => {
+      if (disposed || isRefreshing) return;
+      isRefreshing = true;
+      const controller = new AbortController();
+      activeRequest = controller;
+      requestTimer = window.setTimeout(() => controller.abort(), 10_000);
+
+      try {
+        const result = await loadHomelabInventory(fetch, Date.now(), controller.signal);
+        if (disposed) return;
+        if (!result.ok) {
+          renderFailure(result.reason);
+          return;
+        }
+
+        lastSnapshot = result.snapshot;
+        renderSnapshot(result.snapshot, result.freshness);
+        scheduleFreshnessUpdate(result.snapshot);
+      } catch {
+        if (!disposed) renderFailure('unavailable');
+      } finally {
+        if (requestTimer !== undefined) window.clearTimeout(requestTimer);
+        requestTimer = undefined;
+        if (activeRequest === controller) activeRequest = null;
+        isRefreshing = false;
+      }
+    };
+
+    const dispose = () => {
+      if (disposed) return;
+      disposed = true;
+      if (refreshTimer !== undefined) window.clearInterval(refreshTimer);
+      clearFreshnessTimer();
+      if (requestTimer !== undefined) window.clearTimeout(requestTimer);
+      activeRequest?.abort();
+      delete root.dataset.inventoryInitialized;
+      window.removeEventListener('pagehide', dispose);
+      document.removeEventListener('astro:before-swap', dispose);
+    };
+
+    window.addEventListener('pagehide', dispose, { once: true });
+    document.addEventListener('astro:before-swap', dispose, { once: true });
+    void refresh();
+    refreshTimer = window.setInterval(() => void refresh(), HOMELAB_INVENTORY_REFRESH_MS);
+  }
+
+  initializeArchitecture();
+  document.addEventListener('astro:page-load', initializeArchitecture);
+  window.addEventListener('pageshow', initializeArchitecture);
+</script>

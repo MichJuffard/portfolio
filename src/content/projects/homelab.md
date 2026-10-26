@@ -1,6 +1,6 @@
 ---
 title: "Homelab personnel · Proxmox, WireGuard et administration Linux"
-summary: "Un serveur réutilisé, Proxmox et un VPN WireGuard opérationnel dans un petit conteneur Alpine, avec une VM Debian facultative pour les expérimentations."
+summary: "Un serveur réutilisé et Proxmox comme terrain d’apprentissage de la virtualisation, de l’administration système et de l’accès distant sécurisé."
 status: "en cours"
 category: "Personnel"
 monitoringEnabled: true
@@ -8,12 +8,12 @@ monitoringFallback: "Un LXC Alpine dédié publie les mesures courantes CPU, mé
 featured: true
 featuredOrder: 3
 featuredTitle: "Homelab · VPN WireGuard"
-featuredSummary: "Proxmox, un VPN WireGuard testé à distance dans un LXC Alpine et une VM Debian démarrée à la demande."
+featuredSummary: "Proxmox, l’accès distant sécurisé avec WireGuard et des expérimentations d’administration système à la demande."
 featuredTags: ["Proxmox", "WireGuard", "LXC"]
-tags: ["Proxmox VE", "LXC", "Alpine Linux", "WireGuard", "iptables", "Debian", "Réseau"]
+tags: ["Proxmox VE", "LXC", "Alpine Linux", "WireGuard", "Debian", "Réseau"]
 objective: "Apprendre l’administration système et réseau, la sécurité et la virtualisation sur un serveur aux ressources limitées, puis y mener des expérimentations DevOps."
 contribution: "J’ai monté le serveur, choisi l’architecture et configuré Proxmox et WireGuard moi-même, dans une démarche d’apprentissage guidée. Codex m’assiste pour le code et la présentation du portfolio, pas pour la réalisation du VPN. La chaîne CI/CD du site est un chantier distinct que je code et comprends moi-même."
-learnings: "Administrer Proxmox, créer un LXC non privilégié, configurer WireGuard et OpenRC, puis diagnostiquer le routage, le NAT et le filtrage jusqu’à valider l’accès distant à Proxmox depuis un réseau mobile."
+learnings: "Administrer Proxmox, créer un LXC non privilégié, mettre en service WireGuard et OpenRC, puis valider un accès distant sécurisé depuis un réseau mobile."
 order: 1
 ---
 
@@ -21,47 +21,44 @@ order: 1
 
 Ce laboratoire sert à apprendre l’administration système et réseau, la sécurité et la virtualisation sur du matériel réutilisé. Je veux aussi préparer un terrain d’expérimentation pour les outils DevOps. Les ressources sont limitées par choix : comprendre les besoins et optimiser l’existant avant de multiplier les machines virtuelles.
 
-Le serveur est une ancienne tour ASUS équipée d’un AMD FX-6300 et de 8 Go de RAM DDR3. Un SSD Intel de 180 Go héberge le système et les environnements actifs. Deux disques supplémentaires, de 1 To et 750 Go, sont réservés à de futurs usages de stockage ; ils ne constituent pas encore une solution de stockage ou de sauvegarde documentée.
+Le serveur repose sur du matériel réutilisé aux ressources limitées. Cette contrainte m’amène à privilégier des environnements ciblés et à optimiser l’existant avant d’ajouter des machines.
 
 ## Architecture actuelle
 
-Proxmox VE 9.2 est installé sur le serveur physique. Le serveur est relié en Ethernet à la Freebox et son bridge réseau Proxmox `vmbr0` relie les environnements virtuels au réseau. Deux environnements ont des rôles distincts : le LXC Alpine maintient le VPN disponible, tandis que la VM Debian 13 est facultative et peut être démarrée depuis Proxmox pour les futurs essais Linux, Docker et DevOps. La VM n’est pas requise au fonctionnement du VPN.
+Proxmox VE est installé sur le serveur. L’inventaire dynamique ci-dessus est la source de vérité pour les environnements actuellement autorisés à apparaître sur le portfolio. Le schéma montre uniquement leur relation logique d’hébergement ; le texte de cette fiche décrit le projet et ne remplace pas cette liste.
 
-Le schéma emploie des rôles génériques et ne détaille pas le LAN domestique. Le sous-réseau indiqué est celui du tunnel VPN ; aucune adresse publique, clé ni donnée d’administration n’est publiée.
+Les détails du réseau domestique, les paramètres d’accès et les identifiants internes ne sont pas publiés.
 
 ## VPN distant avec WireGuard
 
 ### Besoin et choix d’architecture
 
-Je voulais administrer Proxmox depuis l’extérieur sans exposer directement son interface d’administration sur Internet. Le VPN fournit un chemin privé entre un Mac client et le serveur. Il donne actuellement accès à Proxmox ; l’accès aux autres VM et conteneurs pourra être ajouté plus tard en adaptant les routes et le filtrage.
+Je voulais administrer le homelab à distance sans rendre son interface d’administration directement accessible sur Internet. WireGuard fournit cet accès sécurisé ; le tunnel a été testé depuis un réseau mobile. Les détails réseau et les paramètres d’accès ne sont pas publiés.
 
 - **Proxmox VE** centralise l’administration du serveur physique, des conteneurs et des machines virtuelles.
-- **LXC plutôt qu’une VM complète :** le VPN est un service léger qui doit rester disponible. Un conteneur consomme moins de ressources qu’une machine virtuelle dédiée dans ce serveur limité.
-- **Alpine Linux plutôt que Debian pour le VPN :** son empreinte réduite convient à ce service ciblé. La VM Debian reste disponible séparément pour apprendre sur un système plus généraliste.
-- **WireGuard natif plutôt que Tailscale :** ce choix privilégie les logiciels libres, limite les dépendances à des services externes et permet de comprendre soi-même les pairs, les routes et le filtrage réseau.
-- **Un réseau VPN séparé du LAN :** le sous-réseau privé du tunnel est routé explicitement. Le transfert IPv4, les règles iptables et le NAT/MASQUERADE définissent le chemin entre le tunnel et l’interface Proxmox.
+- **WireGuard plutôt qu’un service VPN hébergé :** ce choix privilégie les logiciels libres, limite les dépendances à des services externes et permet de comprendre le fonctionnement d’un accès distant sécurisé.
 
 ### Mise en place
 
-Le VPN tourne dans le conteneur **LXC non privilégié 101**, sous **Alpine Linux 3.23**. Il dispose d’un cœur CPU, de 256 Mio de RAM, de 256 Mio de swap et de 2 Gio de stockage alloué. WireGuard est installé nativement et les services sont gérés par OpenRC. Le pair Mac et le pair serveur ont chacun leurs propres clés ; seules les clés publiques sont échangées entre pairs.
+L’accès distant repose sur WireGuard. Le portfolio ne publie ni emplacement, ni identifiant de machine, ni paramètre réseau ou d’authentification.
 
-Le transfert IPv4 est activé dans Alpine. Des règles iptables assurent le transfert et la traduction d’adresses NAT/MASQUERADE. La Freebox ne redirige qu’un seul port UDP vers le conteneur ; le port d’administration Proxmox n’est pas directement exposé sur Internet. Le pare-feu IPv6 est activé sur la Freebox et des règles IPv6 locales complètent le filtrage sur Alpine.
-
-Le conteneur démarre automatiquement avec Proxmox. OpenRC lance WireGuard et restaure les règles réseau au démarrage du conteneur afin que le tunnel retrouve son fonctionnement sans intervention manuelle.
+Les détails de configuration ne sont pas nécessaires à la présentation publique.
 
 ### Tests et résultat
 
-Après un redémarrage du conteneur, j’ai vérifié le démarrage automatique de WireGuard et la restauration des règles réseau. J’ai ensuite testé le tunnel depuis un Mac connecté à un réseau mobile extérieur : l’interface Proxmox était accessible à travers WireGuard. Ce test confirme le parcours actuellement configuré ; il ne constitue pas un audit de sécurité ni une validation d’accès aux autres machines.
+J’ai testé l’accès à l’administration depuis un appareil connecté à un réseau mobile extérieur. Ce test confirme le fonctionnement à ce moment-là ; il ne constitue ni un audit de sécurité ni une preuve de disponibilité continue. Dans l’inventaire, l’état « Actif » décrit uniquement l’état fourni par Proxmox et ne valide pas le tunnel VPN de bout en bout.
 
-Le filtrage réseau mérite encore un durcissement plus complet. Les sauvegardes et la procédure de restauration du conteneur restent également à mettre en place.
+Le renforcement général de la sécurité ainsi que les sauvegardes et la procédure de restauration restent à travailler.
 
-## VM Debian pour les expérimentations
+## Inventaire public des environnements
 
-Une VM Debian 13 distincte existe sur Proxmox. Elle sert de base aux apprentissages Linux et pourra accueillir les expériences Docker et DevOps. Je la démarre à la demande : elle peut rester arrêtée sans couper le VPN, ce qui réserve les ressources du serveur au service qui doit rester disponible.
+La visualisation au-dessus de cette fiche lit `/data/homelab-inventory.json`, un fichier statique publié sur OVHcloud. Le collecteur privé sélectionne les environnements marqués `portfolio-public` ; un environnement reste privé par défaut tant que cette décision n’a pas été prise. Le navigateur ne contacte jamais Proxmox.
+
+L’inventaire est publié toutes les trois minutes et contient uniquement la date de collecte, le nom public, le type VM ou LXC et l’état. Le site le relit toutes les trois minutes et traite les données comme anciennes après quinze minutes. Un état « Actif » décrit l’état fourni par Proxmox au moment de la collecte ; il ne prouve pas la disponibilité d’une application ni le bon fonctionnement du VPN.
 
 ## Monitoring courant du nœud Proxmox
 
-Un LXC dédié sous Alpine Linux 3.23 collecte les mesures du nœud Proxmox via son API HTTPS, avec vérification du certificat TLS et un jeton limité au droit de lecture `Sys.Audit`. Un script shell utilise `curl` et `jq` pour extraire l’utilisation CPU, mémoire et stockage du système de fichiers racine (`rootfs`).
+Un collecteur privé extrait les mesures CPU, mémoire et stockage du système de fichiers racine (`rootfs`) du nœud Proxmox.
 
 Une tâche cron lance la collecte et la publication toutes les trois minutes. Le LXC transfère un JSON public minimal en SFTP vers l’hébergement OVHcloud actuel. Le widget lit uniquement ce fichier et marque les données comme périmées lorsque l’horodatage de collecte atteint 15 minutes ; il ne contacte jamais directement Proxmox. La valeur rootfs décrit le stockage système du nœud, pas l’ensemble des disques du homelab.
 
@@ -75,15 +72,15 @@ Cette investigation m’a appris à vérifier un chemin réseau segment par segm
 
 ## Compétences et apprentissages
 
-Proxmox VE, LXC non privilégié, Alpine Linux, WireGuard, OpenRC, Debian, IPv4/IPv6, routage, iptables, NAT et SSH. Le projet met en pratique la virtualisation, la gestion des ressources, le démarrage des services, l’accès distant et le diagnostic réseau.
+Proxmox VE, LXC non privilégié, Alpine Linux, WireGuard, OpenRC et Debian. Le projet met en pratique la virtualisation, la gestion des ressources, l’administration système, l’accès distant sécurisé et le diagnostic réseau.
 
 ## Prochaines étapes
 
 Ces éléments ne sont pas encore réalisés :
 
-- durcir plus complètement les règles de filtrage réseau ;
+- renforcer davantage la sécurité générale de l’accès distant ;
 - mettre en place un DNS dynamique pour l’accès distant ;
 - définir et tester la sauvegarde et la restauration du conteneur VPN ;
 - étudier Nextcloud pour les fichiers et photos personnels, avec une stratégie de stockage et de sauvegarde adaptée ;
-- expérimenter Docker, un reverse proxy et l’automatisation dans la VM Debian ;
-- éventuellement étendre le VPN à d’autres machines et utilisateurs en adaptant les routes et les règles de filtrage.
+- expérimenter Docker, un reverse proxy et l’automatisation dans un environnement dédié ;
+- éventuellement étendre prudemment l’accès distant à d’autres environnements.

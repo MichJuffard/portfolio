@@ -25,7 +25,7 @@ const projectPreviews = {
   minishell: { image: minishellPreview.src, alt: 'Arbre binaire Minishell : parcours des opérateurs && et || selon les statuts de retour.', action: 'Suivre l’exécution →', width: 960, height: 540 },
   'linear-regression': { image: regressionPreview.src, alt: 'Régression linéaire sur les données du projet : nuage kilométrage-prix et droite ajustée.', action: 'Explorer l’apprentissage →', width: 720, height: 420 },
   ctf: { image: ctfPreview.src, alt: 'Parcours Snowcrash, Rainfall et Override ; une copie de 9 octets dépasse un buffer de 8 octets et modifie une donnée voisine.', action: 'Explorer le parcours sécurité →', width: 960, height: 540 },
-  homelab: { image: homelabPreview.src, alt: 'Schéma du homelab : accès WireGuard depuis un Mac, redirection UDP par la Freebox, puis conteneur Alpine et interface Proxmox ; une VM Debian reste facultative.', action: 'Architecture & VPN →', width: 960, height: 540 },
+  homelab: { image: homelabPreview.src, alt: 'Schéma de l’inventaire public dynamique : Proxmox héberge des environnements VM et LXC autorisés, avec leur nom et leur état.', action: 'Architecture & VPN →', width: 960, height: 540 },
 } as const;
 const preview = projectPreviews[project.id as keyof typeof projectPreviews];
 const transcendenceAlt = featured ? 'Capture Grafana du projet : métriques des services et connexions Nginx.' : 'Capture originale de Transcendance : une partie de Pong avec raquettes en V et obstacles.';

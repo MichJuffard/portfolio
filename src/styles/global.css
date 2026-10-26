@@ -124,26 +124,32 @@
   .project-group { margin-bottom: 48px; scroll-margin-top: 24px; }
   .project-group > p { max-width: 680px; margin: 16px 0 26px; color: var(--muted); }
   .homelab-architecture { max-width: 800px; margin: 38px 0 56px; padding: 22px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
-  .homelab-architecture figcaption { margin-bottom: 20px; color: var(--text); font-size: 1.1rem; font-weight: 600; }
-  .homelab-flow { display: grid; gap: 8px; }
-  .homelab-flow-node { min-width: 0; padding: 15px 18px; border: 1px solid #414761; border-radius: 5px; background: #202436; }
-  .homelab-flow-node > span, .homelab-service > span { display: block; margin-bottom: 5px; color: var(--accent); font: .62rem var(--mono); letter-spacing: .04em; }
-  .homelab-flow-node > strong, .homelab-service > strong { display: block; color: var(--text); font-size: .95rem; }
-  .homelab-flow-node > small, .homelab-service > small { display: block; margin-top: 5px; color: var(--muted); font-size: .72rem; line-height: 1.55; }
-  .homelab-flow-link { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--accent); }
-  .homelab-flow-link > span { font-size: 1.2rem; line-height: 1; }
-  .homelab-flow-link > small { font: .63rem var(--mono); }
-  .homelab-router { border-color: #7773a9; }
-  .homelab-host { padding: 18px; border-color: #7773a9; background: #191d29; }
-  .homelab-host > header { margin-bottom: 14px; }
-  .homelab-host > header > span { display: block; margin-bottom: 5px; color: var(--muted); font: .62rem var(--mono); }
-  .homelab-host > header > strong { color: var(--text); font-size: 1rem; }
-  .homelab-host-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-  .homelab-service { min-width: 0; padding: 13px; border: 1px solid var(--line); border-radius: 4px; background: #11131b; }
-  .homelab-vpn { border-color: #7773a9; }
-  .homelab-admin { border-color: #477854; }
-  .homelab-debian { grid-column: 1 / -1; }
-  .homelab-diagram-note { margin-top: 14px; color: var(--muted); font-size: .7rem; }
+  .homelab-architecture figcaption { margin-bottom: 14px; color: var(--text); font-size: 1.1rem; font-weight: 600; }
+  .architecture-state { display: inline-block; max-width: 100%; margin: 0 0 20px; padding: 6px 10px; border: 1px solid #66638e; border-radius: 4px; color: #d0ccff; font: .68rem/1.5 var(--mono); }
+  .architecture-state[data-inventory-state="stale"], .architecture-state[data-inventory-state="inconsistent"] { border-color: #907448; color: #f2cb80; }
+  .architecture-state[data-inventory-state="unavailable"] { border-color: #8a5960; color: #ffb3b3; }
+  .architecture-visual { display: grid; justify-items: center; }
+  .architecture-host { width: min(100%, 330px); padding: 15px 18px; border: 1px solid #7773a9; border-radius: 6px; background: #202436; text-align: center; }
+  .architecture-host > span { display: block; margin-bottom: 5px; color: var(--muted); font: .62rem var(--mono); letter-spacing: .04em; }
+  .architecture-host > strong { color: var(--text); font-size: 1rem; }
+  .architecture-hosting-link { display: grid; justify-items: center; gap: 2px; margin: 4px 0 10px; color: #d0ccff; font: .65rem var(--mono); }
+  .architecture-link-arrow { font: 1.2rem/1 sans-serif; }
+  .architecture-services { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+  .architecture-service { min-width: 0; }
+  .architecture-service-card { height: 100%; min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 5px; background: #11131b; }
+  .architecture-service-type { display: inline-block; margin-bottom: 9px; padding: 3px 7px; border: 1px solid #68628e; border-radius: 3px; color: #d0ccff; font: .62rem var(--mono); }
+  .architecture-service-card h3 { margin: 0 0 9px; color: var(--text); font-size: .92rem; overflow-wrap: anywhere; }
+  .architecture-service-description, .architecture-service-note { color: var(--muted); font-size: .76rem; line-height: 1.55; overflow-wrap: anywhere; }
+  .architecture-service-note { margin-top: 8px; font-size: .69rem; }
+  .architecture-service-status { display: flex; align-items: baseline; gap: 7px; margin-top: 13px; color: var(--text); font: .68rem/1.5 var(--mono); overflow-wrap: anywhere; }
+  .architecture-service-status::before { content: ''; flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; background: #b6bdcc; }
+  .architecture-service-status[data-service-status="running"]::before { background: #92e6a5; }
+  .architecture-service-status[data-service-status="stopped"]::before { background: #f2cb80; }
+  .architecture-service-status[data-service-status="unverified"]::before { background: #f2cb80; }
+  .architecture-meta { margin: 18px 0 0; padding-top: 12px; border-top: 1px solid var(--line); }
+  .architecture-meta dt { color: var(--muted); font: .62rem var(--mono); }
+  .architecture-meta dd { margin: 4px 0 0; color: var(--text); font-size: .72rem; }
+  .architecture-note { margin-top: 14px; color: var(--muted); font-size: .72rem; line-height: 1.6; }
   .skill-row { padding-block: 20px; border-bottom: 1px solid var(--line); }
   .skill-row:first-child { padding-top: 0; }
   .skill-row h3 { margin-bottom: 8px; }
@@ -223,8 +229,6 @@
     .monitor-state { max-width: 100%; text-align: left; }
     .monitor-metrics { grid-template-columns: 1fr; }
     .homelab-architecture { padding: 16px; }
-    .homelab-host-grid { grid-template-columns: 1fr; }
-    .homelab-debian { grid-column: auto; }
   }
   @media (max-width: 720px) {
     .shell { padding-inline: 22px; }
