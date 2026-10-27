@@ -1,10 +1,10 @@
-# Monitoring courant du nœud Proxmox
+# Métriques publiques du nœud Proxmox
 
 ## Fonctionnement opérationnel
 
 Le widget de `/projets/homelab/` lit le JSON public [`/data/homelab-metrics.json`](https://mjuffard.fr/data/homelab-metrics.json). Le navigateur ne contacte que ce fichier statique ; il n’appelle jamais l’API Proxmox.
 
-Un LXC dédié sous Alpine Linux 3.23 interroge l’API Proxmox en HTTPS avec validation du certificat TLS et un jeton limité à `Sys.Audit`. Un script shell utilise `curl` et `jq` pour calculer les trois pourcentages. Une tâche cron collecte et publie le fichier toutes les trois minutes par SFTP vers l’hébergement OVHcloud. Le portfolio demeure hébergé chez OVHcloud ; la migration du site vers le homelab reste prévue.
+Le LXC `102 — monitoring` produit le fichier public destiné au widget et le transfère périodiquement par SFTP vers OVHcloud. L’implémentation actuellement documentée interroge l’API Proxmox en HTTPS avec validation TLS et un jeton limité à `Sys.Audit`. Un script shell utilise `curl` et `jq` pour calculer les trois pourcentages. Le portfolio demeure hébergé chez OVHcloud ; sa migration vers le homelab reste prévue.
 
 ## Format du fichier public
 
@@ -31,9 +31,15 @@ Les champs manquants, supplémentaires, mal typés ou hors limites font rejeter 
 
 Les barres sont des éléments HTML `<meter>` avec des libellés accessibles. Les changements de pourcentage et l’heure ne sont pas dans une région live ; le statut textuel n’est annoncé que lorsqu’il change.
 
-## Périmètre
+## Périmètre du widget public
 
-Ce système affiche seulement les mesures courantes CPU, mémoire et stockage système du nœud Proxmox. Il n’y a pas de Prometheus, Grafana, stockage historique ou système d’alertes installé. Ce widget ne présente donc pas l’état des services et n’est pas une plateforme complète d’observabilité.
+Ce widget affiche seulement les mesures courantes CPU, mémoire et stockage système (`rootfs`) du nœud Proxmox. Il ne présente pas l’état des services et n’est pas une plateforme complète d’observabilité. Ces données publiques sont distinctes de la supervision privée du LXC `103 — observability`.
+
+## Observabilité privée
+
+Le LXC `103 — observability` héberge Prometheus, PVE Exporter et Grafana OSS. PVE Exporter interroge l’API Proxmox en HTTPS en vérifiant le certificat TLS et au moyen d’un jeton API dédié en lecture seule. Prometheus collecte toutes les 60 secondes et conserve sept jours de données. Prometheus et PVE Exporter écoutent localement ; Grafana reste privé et son accès administratif se fait par tunnel SSH. Le tableau de bord suit les ressources globales et par VM/LXC ainsi que les stockages `local` et `local-lvm`.
+
+Cette pile aide à comprendre et optimiser un hôte physique de 8 Go de RAM. Ses métriques détaillées ne sont pas publiées sur le site. Les composants Proxmox et Grafana ne sont pas interrogés par le navigateur.
 
 Les tests de validation et de fraîcheur se lancent avec :
 

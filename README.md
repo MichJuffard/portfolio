@@ -152,40 +152,46 @@ Aucun payload, programme de challenge ou commande d’exploitation n’est inté
 
 ## Accueil orienté administration système
 
-La sélection fixe de l’accueil comprend Inception, Transcendance sous l’angle DevOps/monitoring, puis le homelab personnel. Le champ `featured` sélectionne les cartes ; `featuredOrder` détermine leur ordre. Les champs optionnels `featuredTitle`, `featuredSummary` et `featuredTags` adaptent la présentation à l’accueil, tandis que la liste complète conserve les titres, descriptions et tags généraux des fiches.
+La sélection de l’accueil met en avant le homelab, Inception, Transcendance sous l’angle supervision/DevOps, puis le portfolio et son exploitation. Le champ `featured` sélectionne les cartes ; `featuredOrder` détermine leur ordre. Les champs optionnels `featuredTitle`, `featuredSummary` et `featuredTags` adaptent la présentation à l’accueil, tandis que la liste complète conserve les titres, descriptions et tags généraux des fiches.
 
-La carte Transcendance utilise la capture Grafana sur l’accueil et le jeu dans la liste complète. Le schéma `src/assets/homelab-stack.svg` illustre l’inventaire public d’environnements VM et LXC hébergés par Proxmox, sans détailler le réseau. La fiche homelab distingue le VPN réalisé des prochaines étapes.
+La carte Transcendance utilise la capture Grafana sur l’accueil et le jeu dans la liste complète. La fiche portfolio présente le cycle de vie du site et distingue les responsabilités de pilotage et d’exploitation de l’assistance de Codex pour le développement. La fiche homelab présente une architecture interactive, les flux privés/publics et l’inventaire issu du JSON.
 
 Philosophers (concurrence, threads, mutex, synchronisation) et Push_swap (algorithmique, complexité, optimisation des opérations) sont mentionnés dans les compétences sans fiches ni cartes supplémentaires, selon le choix du propriétaire. Leurs dépôts n’ont pas été examinés.
 
-## Widget de monitoring du homelab
+## Publication publique et observabilité privée du homelab
 
-La fiche `/projets/homelab/` affiche les mesures courantes du nœud Proxmox depuis `/data/homelab-metrics.json`. Un LXC Alpine dédié interroge l’API Proxmox en HTTPS avec validation TLS et un jeton limité à `Sys.Audit` ; `curl` et `jq` extraient CPU, mémoire et stockage `rootfs`. Une tâche cron collecte et publie le JSON minimal toutes les trois minutes par SFTP vers OVHcloud. Le navigateur désactive le cache, valide les quatre champs et marque la mesure périmée à partir de 15 minutes après son horodatage de collecte. En cas de données absentes ou invalides, aucune valeur de secours n’est affichée. Le build statique ne dépend pas de l’endpoint.
+La fiche `/projets/homelab/` distingue le LXC `102 — monitoring`, chargé de publier les fichiers JSON filtrés, du LXC `103 — observability`, qui garde la supervision détaillée dans le réseau privé. Le navigateur ne contacte ni Proxmox ni les LXC.
 
-Le format public, les règles de validation, la péremption et le périmètre limité du widget sont documentés dans [`docs/homelab-monitoring.md`](docs/homelab-monitoring.md). Le fichier public contient `collected_at`, `cpu_percent`, `memory_percent` et `storage_percent` ; le stockage concerne uniquement `rootfs`. Ce monitoring n’inclut pas Prometheus, Grafana, d’historique ni d’alertes et ne constitue pas une observabilité complète. Pour désactiver le widget, passer `monitoringEnabled` à `false` dans la fiche homelab ; `monitoringFallback` conserve une description exacte du système.
+Le LXC `103` utilise PVE Exporter, Prometheus et Grafana OSS. Prometheus interroge toutes les 60 secondes et conserve sept jours de métriques ; Prometheus et l’exporter écoutent localement, Grafana reste privé et son accès administratif se fait par tunnel SSH. L’API Proxmox est contactée en HTTPS avec vérification TLS et un jeton de lecture limité. Cette pile sert à surveiller un hôte de 8 Go de RAM, mais ses mesures détaillées ne sont pas publiées.
 
-## Architecture publique dynamique du homelab
+Le widget web distinct lit `/data/homelab-metrics.json`, limité à `collected_at`, `cpu_percent`, `memory_percent` et `storage_percent` (stockage `rootfs`). Il vérifie les quatre champs et marque les mesures périmées après 15 minutes. Le build statique ne dépend pas de l’endpoint.
 
-La fiche `/projets/homelab/` lit l’inventaire statique [`/data/homelab-inventory.json`](https://mjuffard.fr/data/homelab-inventory.json). Le collecteur privé sélectionne les VM et LXC portant le tag Proxmox `portfolio-public`. Le principe est privé par défaut : une nouvelle machine n’est publiée qu’après décision explicite et ajout de ce tag côté Proxmox. La sélection et le filtrage restent côté collecteur ; le navigateur ne contacte jamais Proxmox et ne reçoit aucun identifiant interne ou détail réseau.
+## Contrat de l’inventaire public du homelab
 
-Le format public contient uniquement :
+La fiche lit l’inventaire statique [`/data/homelab-inventory.json`](https://mjuffard.fr/data/homelab-inventory.json). Seules les VM et LXC portant le tag Proxmox `portfolio-public` doivent être sélectionnées par le collecteur ; une nouvelle machine reste privée jusqu’à cette décision explicite. Le navigateur n’interroge jamais Proxmox.
+
+Le contrat public enrichi est :
 
 ```ts
 interface HomelabInventory {
   collected_at: string; // date UTC de collecte
   services: Array<{
-    name: string; // libellé public
+    id: string; // vm/<id> ou lxc/<id>, explicitement autorisé dans le JSON public
+    name: string; // nom d’affichage validé pour publication
+    description: string; // courte description rédigée pour le public
     type: 'vm' | 'lxc';
     status: 'running' | 'stopped' | 'unknown';
   }>;
 }
 ```
 
-Le fichier est publié et relu par le navigateur toutes les trois minutes. Le chargement désactive le cache. À partir de quinze minutes après `collected_at`, la vue signale que les données sont anciennes et les états deviennent « non vérifiés » ; un horodatage futur ou un endpoint indisponible ne produit pas un état actuel. Une liste valide vide est affichée comme vide. Les cartes sont générées depuis le tableau : tout service VM ou LXC ajouté à l’inventaire apparaît automatiquement, avec une description générique tant qu’aucune explication locale n’est renseignée.
+Le frontend autorise uniquement `collected_at`, `services`, puis les champs `id`, `name`, `description`, `type` et `status`. Il accepte temporairement les anciens objets sans `id` ou `description`. Un nom ou une description absent reçoit un texte de remplacement neutre. Les textes sont insérés comme texte, et les métadonnées Proxmox supplémentaires sont rejetées. Le producteur doit rédiger les champs publics et ne jamais transmettre jeton, authentification, adresse IP interne, configuration VPN ou secret. Le générateur du LXC 102 n’est pas dans ce dépôt et cette évolution côté serveur reste à faire.
 
-« Actif » signifie uniquement que Proxmox a rapporté `running` lors de la collecte. Cela ne confirme ni la disponibilité de l’application ni, pour le conteneur WireGuard, le fonctionnement du tunnel VPN de bout en bout. Une VM arrêtée à la demande est présentée comme « Arrêté », sans être décrite comme en panne.
+Le fichier est relu toutes les trois minutes avec le cache désactivé. À partir de quinze minutes après `collected_at`, la vue signale que les données sont anciennes et les états deviennent « non vérifiés » ; un horodatage futur ou un endpoint indisponible ne produit pas un état actuel. Une liste valide vide est affichée comme vide. Toutes les nouvelles entrées respectant le contrat apparaissent sans correspondance codée dans le frontend.
 
-La vue publique reste une présentation pédagogique des environnements explicitement autorisés et de leur relation logique d’hébergement. Le widget CPU, mémoire et `rootfs` reste une supervision publique simplifiée. Prometheus/Grafana et une supervision plus détaillée sont des pistes futures pour un tableau de bord privé ; elles ne sont pas présentées comme opérationnelles. Le site lui-même est toujours hébergé chez OVHcloud : sa migration vers le homelab est un projet ultérieur.
+« Actif » signifie uniquement que Proxmox a rapporté `running` lors de la collecte. Cela ne confirme ni la disponibilité de l’application ni, pour le conteneur WireGuard, le fonctionnement du tunnel VPN de bout en bout.
+
+Le site est actuellement hébergé chez OVHcloud. Sa migration vers le homelab est toujours prévue, pas réalisée.
 
 Les règles de validation et de rendu sont détaillées dans [`docs/homelab-inventory.md`](docs/homelab-inventory.md). Les tests dédiés se lancent avec :
 

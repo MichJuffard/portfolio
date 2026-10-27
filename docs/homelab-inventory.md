@@ -1,37 +1,57 @@
 # Inventaire public des environnements Proxmox
 
-La fiche homelab lit le fichier statique [`/data/homelab-inventory.json`](https://mjuffard.fr/data/homelab-inventory.json). Elle n’appelle aucune API Proxmox. Un collecteur privé filtre les environnements marqués `portfolio-public`, retire les métadonnées internes et publie le JSON sur l’hébergement OVHcloud.
+La fiche homelab lit le fichier statique [`/data/homelab-inventory.json`](https://mjuffard.fr/data/homelab-inventory.json). Le navigateur ne contacte ni l’API Proxmox ni les LXC. Le fichier est produit et transféré périodiquement par le LXC `102 — monitoring` vers l’hébergement OVHcloud.
 
 ## Politique de publication
 
-Le homelab est privé par défaut. Seule une décision explicite matérialisée par le tag Proxmox `portfolio-public` autorise le collecteur à inclure une VM ou un LXC. Le navigateur ne choisit pas les environnements publiés. Les modifications du collecteur et de l’infrastructure ne font pas partie du frontend.
+Le homelab est privé par défaut. Le producteur doit sélectionner **uniquement** les VM et LXC portant le tag Proxmox `portfolio-public`. L’ajout ou le retrait de ce tag reste le mécanisme d’autorisation de publication ; l’interface web ne décide jamais quels environnements doivent être publics.
 
-Le contrat public contient exclusivement :
+Les noms et descriptions sont des champs éditoriaux maintenus par le producteur au moment où un environnement est autorisé. Ne pas reprendre automatiquement la description interne de Proxmox : elle peut contenir des informations opérationnelles privées. N’inclure aucun jeton API, identifiant d’authentification, adresse IP interne, configuration VPN ou secret.
 
-```ts
-interface HomelabInventory {
-  collected_at: string; // ISO 8601 en UTC
-  services: Array<{
-    name: string;
-    type: 'vm' | 'lxc';
-    status: 'running' | 'stopped' | 'unknown';
-  }>;
+## Contrat public enrichi
+
+```json
+{
+  "collected_at": "2026-10-27T12:00:00Z",
+  "services": [
+    {
+      "id": "lxc/103",
+      "name": "Observabilité",
+      "description": "Supervision des ressources du homelab avec Prometheus et Grafana.",
+      "type": "lxc",
+      "status": "running"
+    }
+  ]
 }
 ```
 
-Les objets avec des champs supplémentaires ou manquants sont rejetés. Un nom est inséré dans le DOM comme texte, jamais comme HTML. Un statut inattendu est ramené à « Inconnu ». Les noms identiques restent des entrées distinctes ; aucun identifiant Proxmox n’est supposé.
+Le frontend autorise seulement les propriétés racine `collected_at` et `services`, et les propriétés de service suivantes :
+
+| Champ | Type | Règle |
+| --- | --- | --- |
+| `id` | chaîne | Format public explicite `vm/<id>` ou `lxc/<id>`, cohérent avec `type`. |
+| `name` | chaîne | Nom d’affichage public, limité à 80 caractères. |
+| `description` | chaîne | Description publique choisie, limitée à 280 caractères. |
+| `type` | `vm` ou `lxc` | Obligatoire. |
+| `status` | `running`, `stopped` ou `unknown` | Une valeur manquante ou non reconnue est affichée « Inconnu ». |
+
+Les machines doivent fournir les cinq champs du contrat enrichi. Pendant la transition, le frontend accepte les anciens objets sans `id` ni `description`, ainsi que des champs `name` ou `description` manquants. Il fournit alors « Service public sans nom · VM/LXC » ou « Aucune description publique n’a été fournie. » sans déduire le rôle du service. Un `id` présent est validé mais n’est pas affiché dans les cartes.
+
+Les propriétés supplémentaires sont rejetées ; aucun champ d’inventaire interne n’est rendu. Les noms et descriptions sont insérés dans le DOM comme texte, jamais comme HTML. Cette validation protège l’affichage, mais le producteur doit toujours filtrer les machines et rédiger une liste explicite de données publiques avant de publier le fichier.
+
+## Transition du producteur
+
+Le générateur JSON du LXC 102 ne se trouve pas dans ce dépôt et n’a pas été modifié dans le cadre de cette évolution. Le contrat est prêt côté frontend, mais les nouveaux noms et descriptions ne seront visibles qu’après mise à jour et validation du producteur. L’ancienne forme reste affichable pendant ce travail, avec une description neutre.
+
+Lors de l’évolution du producteur, conserver l’autorisation par tag `portfolio-public`, associer les champs éditoriaux à l’identifiant stable de la VM/LXC, filtrer explicitement les clés publiées et garder les deux fichiers JSON statiques. Ne pas exposer une API de Proxmox au navigateur.
 
 ## Affichage et actualisation
 
-La page statique ne charge pas le JSON pendant la génération Astro. À l’ouverture dans un navigateur, le composant demande `/data/homelab-inventory.json` avec `cache: "no-store"`, puis relit le fichier toutes les trois minutes. Les requêtes sont séquentielles, interrompues après dix secondes et leurs minuteries sont nettoyées lors du changement ou de la fermeture de page.
+La génération Astro est statique et ne télécharge pas le JSON. Dans le navigateur, le composant demande `/data/homelab-inventory.json` avec `cache: "no-store"` et relit le fichier toutes les trois minutes. Les requêtes sont séquentielles, interrompues après dix secondes et nettoyées au changement ou à la fermeture de page.
 
-Le seuil de péremption est de quinze minutes après `collected_at`. Il est surveillé même si la page reste ouverte. Pour des données périmées, la dernière liste peut rester visible avec un avertissement ; tous les états sont libellés « État non vérifié » avec leur dernière valeur, et la liste ne confirme pas les autorisations actuelles. Après une erreur de lecture, la dernière liste connue peut rester visible mais son état et son autorisation actuelle sont indiqués comme non vérifiés. Un inventaire valide vide supprime toutes les cartes. Aucune donnée d’exemple n’est utilisée comme remplacement.
+Le seuil de péremption est de quinze minutes après `collected_at`. Pour des données périmées ou après une erreur, la dernière liste peut rester visible, mais ses états deviennent non vérifiés. Un horodatage futur signale une incohérence. Un inventaire valide vide supprime les cartes. Aucun exemple codé en dur n’est utilisé comme remplacement.
 
-Un horodatage dans le futur produit un message d’incohérence. Un endpoint inaccessible ou un JSON invalide produit « Architecture temporairement indisponible ». Le reste de la page reste fonctionnel dans tous ces cas.
-
-Les nouvelles entrées `vm` ou `lxc` produisent automatiquement une carte avec le nom public, le type et l’état. Des descriptions pédagogiques complémentaires peuvent être ajoutées dans `src/data/homelab-service-descriptions.ts`, mais elles ne contrôlent pas la découverte ni l’apparition des cartes.
-
-Le schéma ne représente que la relation logique Proxmox → environnements hébergés. Il ne montre ni connexions réseau, ni segments, ni règles de routage. Le widget des ressources est indépendant de l’inventaire : un état Proxmox `running` n’établit pas la disponibilité d’une application et ne valide pas le tunnel VPN de bout en bout.
+« Actif » indique uniquement que Proxmox a rapporté `running` lors de la collecte. Cela ne démontre ni la disponibilité d’une application ni le bon fonctionnement de WireGuard.
 
 ## Vérification
 

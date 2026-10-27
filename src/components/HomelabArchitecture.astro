@@ -1,33 +1,70 @@
 <figure class="homelab-architecture" data-homelab-architecture aria-labelledby="homelab-architecture-title">
-  <figcaption id="homelab-architecture-title">Architecture publique des environnements Proxmox</figcaption>
-  <p class="architecture-state" data-inventory-state role="status" aria-live="polite">Chargement de l’inventaire public…</p>
-  <noscript><p class="architecture-note">JavaScript doit être activé pour lire l’inventaire public dynamique.</p></noscript>
+  <figcaption id="homelab-architecture-title">Homelab Proxmox : infrastructure et flux</figcaption>
+  <p class="topology-intro">Ouvrez les éléments pour parcourir leur rôle. Les flèches décrivent des échanges logiques ; aucun service privé n’est accessible depuis cette visualisation.</p>
 
-  <div class="architecture-visual">
-    <div class="architecture-host">
-      <span>Nœud d’hébergement</span>
-      <strong>Proxmox</strong>
+  <div class="topology-map" aria-label="Schéma interactif de l’infrastructure">
+    <details class="topology-node topology-server" open>
+      <summary><span class="topology-kind">Serveur physique · 8 Go RAM</span><strong>Proxmox VE</strong></summary>
+      <p>Hyperviseur qui héberge la VM Debian et les trois LXC. La capacité limitée impose de surveiller l’usage mémoire et de dimensionner les services avec soin.</p>
+    </details>
+    <p class="topology-connector topology-virtualization"><span aria-hidden="true">↓</span> virtualisation · VM et LXC</p>
+
+    <div class="topology-guests" aria-label="Environnements hébergés par Proxmox">
+      <details class="topology-node">
+        <summary><span class="topology-kind">VM 100 · privée</span><strong>Laboratoire Debian</strong></summary>
+        <p>Environnement Debian de tests et d’apprentissage, démarré à la demande. Il n’est pas présenté comme un service disponible en continu.</p>
+        <span class="topology-badge topology-private">Environnement privé</span>
+      </details>
+      <details class="topology-node">
+        <summary><span class="topology-kind">LXC 101 · accès distant</span><strong>WireGuard</strong></summary>
+        <p>Fournit l’accès distant privé à l’infrastructure. L’état du conteneur dans l’inventaire ne prouve pas à lui seul le bon fonctionnement du tunnel.</p>
+        <span class="topology-badge topology-admin">Flux d’administration</span>
+      </details>
+      <details class="topology-node">
+        <summary><span class="topology-kind">LXC 102 · publication</span><strong>Collecte contrôlée</strong></summary>
+        <p>Collecte l’inventaire Proxmox, conserve uniquement les VM et LXC explicitement marqués <code>portfolio-public</code>, puis publie les fichiers JSON statiques vers OVHcloud.</p>
+        <span class="topology-badge topology-public">Données publiques autorisées</span>
+      </details>
+      <details class="topology-node">
+        <summary><span class="topology-kind">LXC 103 · supervision privée</span><strong>Prometheus · PVE Exporter · Grafana</strong></summary>
+        <p>PVE Exporter interroge l’API Proxmox en HTTPS avec validation TLS et un jeton en lecture seule. Prometheus conserve sept jours de métriques ; Grafana les présente sur un tableau de bord privé, accessible pour l’administration via un tunnel SSH.</p>
+        <span class="topology-badge topology-metrics">Flux de supervision privés</span>
+      </details>
     </div>
-    <div class="architecture-hosting-link" aria-hidden="true">
-      <span class="architecture-link-arrow">↓</span>
-      <span>héberge</span>
-    </div>
-    <ul class="architecture-services" data-inventory-services aria-label="Environnements publics hébergés sur Proxmox"></ul>
+
+    <ul class="topology-flows" aria-label="Flux entre les composants">
+      <li><span class="topology-badge topology-metrics">Métriques privées</span><span>API Proxmox → PVE Exporter → Prometheus → Grafana. Prometheus et l’exporter écoutent localement ; Grafana n’est pas exposé sur Internet.</span></li>
+      <li><span class="topology-badge topology-admin">Administration</span><span>Accès distant au homelab via WireGuard ; accès administratif à Grafana par tunnel SSH.</span></li>
+      <li><span class="topology-badge topology-public">Publication contrôlée</span><span>LXC 102 filtre l’inventaire et transmet des JSON statiques à OVHcloud. Seuls les champs publics autorisés sont affichés ici.</span></li>
+    </ul>
+
+    <p class="topology-connector topology-publication"><span aria-hidden="true">↓</span> fichiers JSON publics · HTTPS</p>
+    <details class="topology-node topology-portfolio">
+      <summary><span class="topology-kind">Site public · OVHcloud</span><strong>Portfolio mjuffard.fr</strong></summary>
+      <p>Le site statique lit les fichiers JSON périodiques pour afficher l’inventaire choisi et un jeu limité de métriques. Le navigateur ne contacte ni Proxmox ni les LXC ; les métriques détaillées et Grafana restent privés.</p>
+      <span class="topology-badge topology-public">Seules les données prévues sont publiques</span>
+    </details>
   </div>
 
-  <dl class="architecture-meta">
-    <div>
-      <dt>Dernière collecte</dt>
-      <dd><time data-inventory-time>Aucune collecte reçue</time></dd>
-    </div>
-  </dl>
-  <p class="architecture-note" data-inventory-note>
-    Seuls les environnements explicitement autorisés sont publiés. Ce schéma décrit leur hébergement logique ; il ne représente pas les connexions réseau.
-  </p>
+  <section class="topology-inventory" aria-labelledby="topology-inventory-title">
+    <h2 id="topology-inventory-title">Inventaire public reçu</h2>
+    <p class="architecture-state" data-inventory-state role="status" aria-live="polite">Chargement de l’inventaire public…</p>
+    <noscript><p class="architecture-note">JavaScript doit être activé pour lire l’inventaire dynamique. Le schéma d’architecture ci-dessus reste consultable.</p></noscript>
+    <ul class="architecture-services" data-inventory-services aria-label="Environnements publics sélectionnés par le collecteur"></ul>
+    <dl class="architecture-meta">
+      <div>
+        <dt>Dernière collecte</dt>
+        <dd><time data-inventory-time>Aucune collecte reçue</time></dd>
+      </div>
+    </dl>
+    <p class="architecture-note" data-inventory-note>
+      Seuls les environnements portant le tag Proxmox <code>portfolio-public</code> doivent apparaître ici. Les valeurs sont lues depuis un fichier statique publié périodiquement.
+    </p>
+  </section>
 </figure>
 
 <script>
-  import { getHomelabServiceViews } from '../data/homelab-service-descriptions';
+  import { getHomelabServiceViews } from '../data/homelab-service-view';
   import {
     getHomelabInventoryFreshness,
     HOMELAB_INVENTORY_MAX_AGE_MS,
@@ -106,12 +143,6 @@
           : service.statusLabel;
 
         card.append(type, name, description, status);
-        if (service.note) {
-          const note = document.createElement('p');
-          note.className = 'architecture-service-note';
-          note.textContent = service.note;
-          card.append(note);
-        }
         item.append(card);
         servicesElement.append(item);
       }
@@ -134,7 +165,7 @@
       } else {
         stateElement.textContent = 'Architecture à jour';
         if (noteElement) {
-          noteElement.textContent = 'Les cartes reprennent le nom, le type et l’état du JSON public. Les descriptions pédagogiques sont ajoutées localement lorsqu’elles sont connues.';
+          noteElement.textContent = 'Les noms et descriptions proviennent du JSON public. Les champs absents reçoivent un libellé neutre ; les cartes ne révèlent aucune métadonnée Proxmox supplémentaire.';
         }
       }
     };

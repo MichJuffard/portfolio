@@ -3,7 +3,9 @@ export type HomelabServiceStatus = 'running' | 'stopped' | 'unknown';
 export type HomelabInventoryFreshness = 'current' | 'stale' | 'inconsistent';
 
 export interface HomelabService {
-  name: string;
+  id?: string;
+  name?: string;
+  description?: string;
   type: HomelabServiceType;
   status: HomelabServiceStatus;
 }
@@ -20,5 +22,4 @@ export interface HomelabServiceView {
   status: HomelabServiceStatus;
   statusLabel: string;
   description: string;
-  note?: string;
 }

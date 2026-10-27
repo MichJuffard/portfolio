@@ -11,8 +11,8 @@ const initialState = 'unavailable' as const;
 <section class="monitor-panel" data-monitor-panel data-state={initialState} aria-labelledby="monitor-title">
   <header class="monitor-header">
     <div>
-      <p class="eyebrow">SUPERVISION DU NŒUD PROXMOX</p>
-      <h2 id="monitor-title">État des ressources</h2>
+      <p class="eyebrow">MESURES PUBLIQUES LIMITÉES</p>
+      <h2 id="monitor-title">Ressources publiées du nœud</h2>
     </div>
     <span class="monitor-state" data-monitor-state={initialState} role="status" aria-live="polite">{getMonitoringStateLabel(initialState)}</span>
   </header>
@@ -48,7 +48,7 @@ const initialState = 'unavailable' as const;
     ))}
   </dl>
 
-  <p class="monitor-footnote">Les pourcentages proviennent des mesures courantes du nœud Proxmox. Le stockage concerne uniquement son système de fichiers racine (rootfs), pas l’ensemble des disques du homelab.</p>
+  <p class="monitor-footnote">Le fichier public ne contient que des pourcentages courants. Le stockage concerne uniquement le système de fichiers racine (rootfs), pas tous les disques. L’historique détaillé et Grafana restent sur le réseau privé.</p>
 </section>
 
 <script>

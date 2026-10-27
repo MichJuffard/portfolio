@@ -18,13 +18,13 @@ order: 1
 
 ## Contexte et objectif
 
-Ce laboratoire sert à apprendre l’administration système et réseau, la sécurité et la virtualisation sur du matériel réutilisé. Je veux aussi préparer un terrain d’expérimentation pour les outils DevOps. Les ressources sont limitées par choix : comprendre les besoins et optimiser l’existant avant de multiplier les machines virtuelles.
+Ce laboratoire sert à pratiquer l’administration système et réseau, la sécurité, la virtualisation et la supervision sur un serveur physique de **8 Go de RAM**. Cette capacité limitée rend la mesure des ressources utile au quotidien : comprendre les consommations avant d’ajouter ou de redimensionner un service.
 
-Le serveur repose sur du matériel réutilisé aux ressources limitées. Cette contrainte m’amène à privilégier des environnements ciblés et à optimiser l’existant avant d’ajouter des machines.
+Les environnements sont séparés par rôle : une VM Debian démarrée à la demande, un LXC WireGuard pour l’accès distant, un LXC de collecte et publication contrôlée, et un LXC dédié à l’observabilité privée.
 
 ## Architecture actuelle
 
-Proxmox VE est installé sur le serveur. L’inventaire dynamique ci-dessus est la source de vérité pour les environnements actuellement autorisés à apparaître sur le portfolio. Le schéma montre uniquement leur relation logique d’hébergement ; le texte de cette fiche décrit le projet et ne remplace pas cette liste.
+Proxmox VE héberge une VM et trois LXC. Le schéma interactif distingue la supervision privée, les accès d’administration et les fichiers qui sont volontairement publiés. L’inventaire dynamique reste la source de vérité pour les environnements autorisés à apparaître sur le portfolio.
 
 Les détails du réseau domestique, les paramètres d’accès et les identifiants internes ne sont pas publiés.
 
@@ -51,17 +51,29 @@ Le renforcement général de la sécurité ainsi que les sauvegardes et la proc�
 
 ## Inventaire public des environnements
 
-La visualisation au-dessus de cette fiche lit `/data/homelab-inventory.json`, un fichier statique publié sur OVHcloud. Le collecteur privé sélectionne les environnements marqués `portfolio-public` ; un environnement reste privé par défaut tant que cette décision n’a pas été prise. Le navigateur ne contacte jamais Proxmox.
+La visualisation au-dessus de cette fiche lit `/data/homelab-inventory.json`, un fichier statique publié sur OVHcloud. Le collecteur sélectionne uniquement les environnements marqués `portfolio-public` ; un environnement reste privé par défaut tant que cette décision explicite n’a pas été prise. Le navigateur ne contacte jamais Proxmox.
 
-L’inventaire est publié toutes les trois minutes et contient uniquement la date de collecte, le nom public, le type VM ou LXC et l’état. Le site le relit toutes les trois minutes et traite les données comme anciennes après quinze minutes. Un état « Actif » décrit l’état fourni par Proxmox au moment de la collecte ; il ne prouve pas la disponibilité d’une application ni le bon fonctionnement du VPN.
+Le contrat enrichi attendu contient `collected_at` et, pour chaque service, `id`, `name`, `description`, `type` et `status`. Le nom et la description sont des métadonnées éditoriales publiques maintenues par le collecteur ; le frontend ne les déduit pas du nom technique et ne lit pas la description interne Proxmox. Les anciens objets sans `id` ni `description` restent acceptés pendant la transition. En leur absence, le site affiche un nom ou une description de remplacement neutre, sans inventer de rôle.
 
-## Monitoring courant du nœud Proxmox
+Le site relit le fichier toutes les trois minutes et traite les données comme anciennes après quinze minutes. Un état « Actif » décrit uniquement l’état fourni par Proxmox au moment de la collecte ; il ne prouve pas la disponibilité d’une application ni le bon fonctionnement du tunnel VPN.
 
-Un collecteur privé extrait les mesures CPU, mémoire et stockage du système de fichiers racine (`rootfs`) du nœud Proxmox.
+Le générateur du LXC 102 n’est pas présent dans ce dépôt et n’a pas été modifié. Jusqu’à ce qu’il publie les champs `id` et `description` dans le JSON, l’inventaire reste fonctionnel grâce à la compatibilité historique, mais les descriptions publiques ne peuvent pas apparaître automatiquement.
 
-Une tâche cron lance la collecte et la publication toutes les trois minutes. Le LXC transfère un JSON public minimal en SFTP vers l’hébergement OVHcloud actuel. Le widget lit uniquement ce fichier et marque les données comme périmées lorsque l’horodatage de collecte atteint 15 minutes ; il ne contacte jamais directement Proxmox. La valeur rootfs décrit le stockage système du nœud, pas l’ensemble des disques du homelab.
+## Supervision privée et capacité du serveur
 
-Ce dispositif affiche uniquement des mesures courantes du nœud. Il n’inclut pas Prometheus, Grafana, de stockage historique ni de système d’alertes, et ne constitue pas une plateforme complète d’observabilité. Le portfolio reste hébergé chez OVHcloud ; sa migration vers le homelab est toujours prévue et n’a pas été réalisée.
+Le LXC `103 — observability` sépare l’observation technique de la publication du site. **PVE Exporter** interroge l’API Proxmox en HTTPS en vérifiant le certificat TLS, au moyen d’un jeton dédié aux permissions de lecture nécessaires. L’exporter et **Prometheus** écoutent localement dans le LXC ; Prometheus collecte les métriques toutes les 60 secondes et conserve sept jours d’historique.
+
+**Grafana OSS** présente un tableau de bord privé, accessible pour l’administration par tunnel SSH. Il n’est pas exposé sur Internet et les séries détaillées ne sont pas transmises au portfolio. Le tableau de bord réunit des jauges CPU et mémoire globales, des courbes CPU et RAM par VM/LXC, la RAM en valeur absolue et en pourcentage, ainsi que l’occupation des stockages `local` et `local-lvm`, avec historique et seuils visuels.
+
+Le besoin principal est de surveiller et d’optimiser les ressources d’un hôte limité à 8 Go de RAM. Une collecte par service permet d’identifier les consommations et d’éclairer les choix de capacité ; elle n’établit pas à elle seule la disponibilité fonctionnelle des applications.
+
+## Collecte et publication périodique
+
+Le LXC `102 — monitoring` a une responsabilité distincte : il collecte l’inventaire et un petit ensemble de mesures, puis publie `/data/homelab-inventory.json` et `/data/homelab-metrics.json` comme fichiers statiques vers l’hébergement OVHcloud. L’inventaire ne contient que les VM et LXC explicitement marqués `portfolio-public`. Le fichier de mesures existant expose seulement `collected_at`, `cpu_percent`, `memory_percent` et `storage_percent`.
+
+Le widget public se limite à ces pourcentages, notamment au stockage `rootfs` du nœud. Il n’expose ni Prometheus, ni Grafana, ni les courbes détaillées par machine. Le navigateur lit les fichiers publics ; il ne contacte jamais directement Proxmox ou les LXC.
+
+La collecte publique et la supervision privée sont deux flux distincts. Le premier publie un inventaire autorisé et quelques pourcentages ; le second conserve l’historique détaillé dans Prometheus et l’affiche dans Grafana sans exposition publique. Le portfolio reste hébergé chez OVHcloud ; sa migration vers le homelab est toujours prévue et n’a pas été réalisée.
 
 ## Diagnostic réseau : du symptôme à la résolution
 
@@ -71,7 +83,7 @@ Cette investigation m’a appris à vérifier un chemin réseau segment par segm
 
 ## Compétences et apprentissages
 
-Proxmox VE, LXC non privilégié, Alpine Linux, WireGuard, OpenRC et Debian. Le projet met en pratique la virtualisation, la gestion des ressources, l’administration système, l’accès distant sécurisé et le diagnostic réseau.
+Proxmox VE, VM Debian, LXC, WireGuard, Prometheus, PVE Exporter et Grafana. Le projet met en pratique la virtualisation, la gestion des ressources, l’administration système, l’accès distant sécurisé, la supervision et le filtrage de données publiques.
 
 ## Prochaines étapes
 

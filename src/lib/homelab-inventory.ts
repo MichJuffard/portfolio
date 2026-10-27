@@ -18,9 +18,8 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
-function hasExactlyKeys(value: Record<string, unknown>, expected: string[]): boolean {
-  const keys = Object.keys(value);
-  return keys.length === expected.length && expected.every(key => Object.hasOwn(value, key));
+function hasOnlyKeys(value: Record<string, unknown>, allowed: string[]): boolean {
+  return Object.keys(value).every(key => allowed.includes(key));
 }
 
 function isIsoUtcTimestamp(value: unknown): value is string {
@@ -42,7 +41,8 @@ function normalizeStatus(value: unknown): HomelabServiceStatus {
 export function validateHomelabInventory(value: unknown):
   | { ok: true; inventory: HomelabInventory }
   | { ok: false; reason: string } {
-  if (!isRecord(value) || !hasExactlyKeys(value, ['collected_at', 'services'])) {
+  if (!isRecord(value) || !hasOnlyKeys(value, ['collected_at', 'services'])
+    || !Object.hasOwn(value, 'collected_at') || !Object.hasOwn(value, 'services')) {
     return { ok: false, reason: 'Le JSON doit contenir uniquement collected_at et services.' };
   }
 
@@ -56,23 +56,42 @@ export function validateHomelabInventory(value: unknown):
 
   const services: HomelabService[] = [];
   for (const service of value.services) {
-    if (!isRecord(service) || !hasExactlyKeys(service, ['name', 'type', 'status'])) {
-      return { ok: false, reason: 'Chaque service doit contenir uniquement name, type et status.' };
+    if (!isRecord(service) || !hasOnlyKeys(service, ['id', 'name', 'description', 'type', 'status'])
+      || !Object.hasOwn(service, 'type')) {
+      return { ok: false, reason: 'Chaque service doit contenir uniquement id, name, description, type et status.' };
     }
 
-    if (typeof service.name !== 'string' || service.name.trim().length === 0) {
-      return { ok: false, reason: 'Le nom public de chaque service doit être un texte non vide.' };
+    if (service.id !== undefined
+      && (typeof service.id !== 'string'
+        || !/^(vm|lxc)\/\d{1,6}$/.test(service.id)
+        || service.id.split('/')[0] !== service.type)) {
+      return { ok: false, reason: 'id doit respecter le format vm/<id> ou lxc/<id>.' };
+    }
+
+    if (service.name !== undefined
+      && (typeof service.name !== 'string' || service.name.length > 80)) {
+      return { ok: false, reason: 'name doit être un texte de 80 caractères maximum.' };
+    }
+
+    if (service.description !== undefined
+      && (typeof service.description !== 'string' || service.description.length > 280)) {
+      return { ok: false, reason: 'description doit être un texte de 280 caractères maximum.' };
     }
 
     if (service.type !== 'vm' && service.type !== 'lxc') {
       return { ok: false, reason: 'Le type de chaque service doit être vm ou lxc.' };
     }
 
-    services.push({
-      name: service.name,
+    const normalizedService: HomelabService = {
       type: service.type as HomelabServiceType,
       status: normalizeStatus(service.status),
-    });
+    };
+    if (typeof service.id === 'string') normalizedService.id = service.id;
+    if (typeof service.name === 'string' && service.name.trim()) normalizedService.name = service.name.trim();
+    if (typeof service.description === 'string' && service.description.trim()) {
+      normalizedService.description = service.description.trim();
+    }
+    services.push(normalizedService);
   }
 
   return { ok: true, inventory: { collected_at: value.collected_at, services } };
