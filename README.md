@@ -154,7 +154,7 @@ Aucun payload, programme de challenge ou commande d’exploitation n’est inté
 
 La sélection de l’accueil met en avant le homelab, Inception, Transcendance sous l’angle supervision/DevOps, puis le portfolio et son exploitation. Le champ `featured` sélectionne les cartes ; `featuredOrder` détermine leur ordre. Les champs optionnels `featuredTitle`, `featuredSummary` et `featuredTags` adaptent la présentation à l’accueil, tandis que la liste complète conserve les titres, descriptions et tags généraux des fiches.
 
-La carte Transcendance utilise la capture Grafana sur l’accueil et le jeu dans la liste complète. La fiche portfolio présente le cycle de vie du site et distingue les responsabilités de pilotage et d’exploitation de l’assistance de Codex pour le développement. La fiche homelab présente une architecture interactive, les flux privés/publics et l’inventaire issu du JSON.
+La carte Transcendance utilise la capture Grafana sur l’accueil et le jeu dans la liste complète. La fiche portfolio présente le cycle de vie du site et distingue les responsabilités de pilotage et d’exploitation de l’assistance de Codex pour le développement. La fiche homelab réunit l’inventaire public périodique dans le schéma interactif de l’infrastructure et distingue les flux privés/publics.
 
 Philosophers (concurrence, threads, mutex, synchronisation) et Push_swap (algorithmique, complexité, optimisation des opérations) sont mentionnés dans les compétences sans fiches ni cartes supplémentaires, selon le choix du propriétaire. Leurs dépôts n’ont pas été examinés.
 

@@ -162,32 +162,36 @@
   .topology-server > p { text-align: left; }
   .topology-connector { display: grid; justify-items: center; gap: 2px; margin: 0; color: #d0ccff; font: .65rem/1.45 var(--mono); text-align: center; }
   .topology-connector > span { font: 1.15rem/1 sans-serif; }
-  .topology-guests { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; border: 1px dashed #555b72; border-radius: 6px; }
+  .topology-guests { width: 100%; min-width: 0; padding: 14px; border: 1px dashed #555b72; border-radius: 6px; }
+  .topology-inventory-header { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+  .topology-inventory-header h2, .topology-flows-panel h2 { margin: 2px 0 0; color: var(--text); font-size: .88rem; }
+  .topology-inventory-header .architecture-state { flex: 0 1 auto; margin: 0; text-align: right; }
+  .topology-guests > .architecture-services { margin-top: 14px; }
   .topology-badge { display: inline-block; width: fit-content; max-width: 100%; margin-top: 12px; padding: 4px 7px; border: 1px solid var(--line); border-radius: 3px; font: .59rem/1.4 var(--mono); overflow-wrap: anywhere; }
-  .topology-private { color: #c6cbd6; }
   .topology-admin { border-color: #8d7445; color: #f2cb80; }
   .topology-public { border-color: #497552; color: #a9e5b4; }
   .topology-metrics { border-color: #54628c; color: #bfc9ff; }
-  .topology-flows { width: 100%; display: grid; gap: 8px; margin: 8px 0 0; padding: 14px; list-style: none; border: 1px solid var(--line); border-radius: 5px; background: #191d29; }
+  .topology-flows-panel { width: 100%; padding: 14px; border: 1px solid var(--line); border-radius: 5px; background: #191d29; }
+  .topology-flows { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
   .topology-flows li { display: grid; grid-template-columns: minmax(150px, auto) minmax(0, 1fr); align-items: start; gap: 8px 14px; color: var(--muted); font-size: .72rem; line-height: 1.6; }
   .topology-flows .topology-badge { margin: 0; }
   .topology-publication { margin-top: 4px; }
   .topology-portfolio { max-width: 520px; border-color: #497552; }
-  .topology-inventory { margin-top: 28px; }
-  .topology-inventory h2 { margin-bottom: 12px; color: var(--text); font-size: .94rem; }
-  .topology-inventory .architecture-state { margin-bottom: 14px; }
-  .topology-inventory .architecture-meta { margin-top: 14px; }
   .architecture-state { display: inline-block; max-width: 100%; margin: 0 0 20px; padding: 6px 10px; border: 1px solid #66638e; border-radius: 4px; color: #d0ccff; font: .68rem/1.5 var(--mono); }
   .architecture-state[data-inventory-state="stale"], .architecture-state[data-inventory-state="inconsistent"] { border-color: #907448; color: #f2cb80; }
   .architecture-state[data-inventory-state="unavailable"], .architecture-state[data-inventory-state="invalid"], .architecture-state[data-inventory-state="error"] { border-color: #8a5960; color: #ffb3b3; }
   .architecture-services { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
   .architecture-service { min-width: 0; }
   .architecture-service-card { height: 100%; min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 5px; background: #11131b; }
+  .architecture-service-card summary { position: relative; padding-right: 20px; cursor: pointer; list-style: none; }
+  .architecture-service-card summary::-webkit-details-marker { display: none; }
+  .architecture-service-card summary::after { content: '＋'; position: absolute; top: 2px; right: 0; color: var(--accent); font-family: var(--mono); }
+  .architecture-service-card[open] summary::after { content: '−'; }
+  .architecture-service-card summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
   .architecture-service-type { display: inline-block; margin-bottom: 9px; padding: 3px 7px; border: 1px solid #68628e; border-radius: 3px; color: #d0ccff; font: .62rem var(--mono); }
-  .architecture-service-card h3 { margin: 0 0 9px; color: var(--text); font-size: .92rem; overflow-wrap: anywhere; }
-  .architecture-service-description, .architecture-service-note { color: var(--muted); font-size: .76rem; line-height: 1.55; overflow-wrap: anywhere; }
-  .architecture-service-note { margin-top: 8px; font-size: .69rem; }
-  .architecture-service-status { display: flex; align-items: baseline; gap: 7px; margin-top: 13px; color: var(--text); font: .68rem/1.5 var(--mono); overflow-wrap: anywhere; }
+  .architecture-service-name { display: block; margin: 0 0 9px; color: var(--text); font-size: .92rem; overflow-wrap: anywhere; }
+  .architecture-service-description { margin: 12px 0 0; color: var(--muted); font-size: .76rem; line-height: 1.55; overflow-wrap: anywhere; }
+  .architecture-service-status { display: flex; align-items: baseline; gap: 7px; margin: 0; color: var(--text); font: .68rem/1.5 var(--mono); overflow-wrap: anywhere; }
   .architecture-service-status::before { content: ''; flex: 0 0 7px; width: 7px; height: 7px; border-radius: 50%; background: #b6bdcc; }
   .architecture-service-status[data-service-status="running"]::before { background: #92e6a5; }
   .architecture-service-status[data-service-status="stopped"]::before { background: #f2cb80; }
@@ -276,7 +280,9 @@
     .monitor-state { max-width: 100%; text-align: left; }
     .monitor-metrics { grid-template-columns: 1fr; }
     .homelab-architecture { padding: 16px; }
-    .topology-guests { grid-template-columns: 1fr; padding: 9px; }
+    .topology-guests { padding: 10px; }
+    .topology-inventory-header { flex-direction: column; }
+    .topology-inventory-header .architecture-state { text-align: left; }
     .topology-flows li { grid-template-columns: 1fr; gap: 5px; }
   }
   @media (max-width: 720px) {

@@ -24,7 +24,7 @@ Les environnements sont séparés par rôle : une VM Debian démarrée à la dem
 
 ## Architecture actuelle
 
-Proxmox VE héberge une VM et trois LXC. Le schéma interactif distingue la supervision privée, les accès d’administration et les fichiers qui sont volontairement publiés. L’inventaire dynamique reste la source de vérité pour les environnements autorisés à apparaître sur le portfolio.
+Proxmox VE héberge une VM et trois LXC. Le schéma interactif intègre l’inventaire périodique des environnements publics sous l’hyperviseur, puis distingue les flux d’administration, de supervision privée et de publication vers le portfolio.
 
 Les détails du réseau domestique, les paramètres d’accès et les identifiants internes ne sont pas publiés.
 
@@ -51,7 +51,7 @@ Le renforcement général de la sécurité ainsi que les sauvegardes et la proc�
 
 ## Inventaire public des environnements
 
-La visualisation au-dessus de cette fiche lit `/data/homelab-inventory.json`, un fichier statique publié sur OVHcloud. Le collecteur sélectionne uniquement les environnements marqués `portfolio-public` ; un environnement reste privé par défaut tant que cette décision explicite n’a pas été prise. Le navigateur ne contacte jamais Proxmox.
+Le schéma d’infrastructure au-dessus de cette fiche intègre les environnements chargés depuis `/data/homelab-inventory.json`, un fichier statique publié sur OVHcloud. Le collecteur sélectionne uniquement les environnements marqués `portfolio-public` ; un environnement reste privé par défaut tant que cette décision explicite n’a pas été prise. Le navigateur ne contacte jamais Proxmox.
 
 Le contrat enrichi attendu contient `collected_at` et, pour chaque service, `id`, `name`, `description`, `type` et `status`. Le nom et la description sont des métadonnées éditoriales publiques maintenues par le collecteur ; le frontend ne les déduit pas du nom technique et ne lit pas la description interne Proxmox. Les anciens objets sans `id` ni `description` restent acceptés pendant la transition. En leur absence, le site affiche un nom ou une description de remplacement neutre, sans inventer de rôle.
 
