@@ -24,6 +24,61 @@ const enrichedService = {
   status: 'running',
 };
 const enrichedInventory = { collected_at: collectedAt, services: [enrichedService] };
+const publishedInventory = {
+  collected_at: '2026-10-27T12:16:00Z',
+  services: [
+    {
+      id: 'qemu/100',
+      name: "Laboratoire d'expérimentation",
+      description: "Environnement Debian dédié aux expérimentations, aux tests et à l'apprentissage de l'administration système.",
+      type: 'vm',
+      status: 'stopped',
+    },
+    {
+      id: 'lxc/101',
+      name: 'Accès distant sécurisé',
+      description: "Accès VPN WireGuard permettant d'administrer le homelab à distance de manière sécurisée.",
+      type: 'lxc',
+      status: 'running',
+    },
+    {
+      id: 'lxc/102',
+      name: 'Publication des données',
+      description: 'Collecte et publication automatisées des informations sélectionnées du homelab vers le portfolio.',
+      type: 'lxc',
+      status: 'running',
+    },
+    {
+      id: 'lxc/103',
+      name: 'Observabilité',
+      description: 'Supervision privée des ressources Proxmox avec Prometheus, PVE Exporter et Grafana.',
+      type: 'lxc',
+      status: 'running',
+    },
+  ],
+};
+
+test('accepts the published inventory with native Proxmox qemu and LXC IDs', async () => {
+  const result = validateHomelabInventory(publishedInventory);
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+
+  const views = getHomelabServiceViews(result.inventory.services);
+  assert.deepEqual(views.map(service => service.name), [
+    "Laboratoire d'expérimentation",
+    'Accès distant sécurisé',
+    'Publication des données',
+    'Observabilité',
+  ]);
+  assert.deepEqual(views.map(service => service.typeLabel), ['VM', 'LXC', 'LXC', 'LXC']);
+  assert.deepEqual(views.map(service => service.statusLabel), ['Arrêté', 'Actif', 'Actif', 'Actif']);
+  assert.equal(views[3].description, publishedInventory.services[3].description);
+
+  const now = Date.parse('2026-10-27T12:20:00Z');
+  const loaded = await loadHomelabInventory(async () => ({ ok: true, json: async () => publishedInventory }), now);
+  assert.equal(loaded.ok, true);
+  if (loaded.ok) assert.equal(loaded.freshness, 'current');
+});
 
 test('accepts the enriched public service contract and preserves curated fields', () => {
   const result = validateHomelabInventory(enrichedInventory);
@@ -118,6 +173,9 @@ test('rejects unapproved metadata and malformed public values', () => {
   assert.equal(validateHomelabInventory({ ...legacyInventory, services: [{ ...legacyServices[0], type: 'server' }] }).ok, false);
   assert.equal(validateHomelabInventory({ ...legacyInventory, services: [{ ...legacyServices[0], id: 'ct/103' }] }).ok, false);
   assert.equal(validateHomelabInventory({ ...legacyInventory, services: [{ ...legacyServices[0], id: 'lxc/103' }] }).ok, false);
+  assert.equal(validateHomelabInventory({ ...legacyInventory, services: [{ ...legacyServices[0], id: 'qemu/0' }] }).ok, false);
+  assert.equal(validateHomelabInventory({ ...legacyInventory, services: [{ ...legacyServices[0], id: 'qemu/1000000' }] }).ok, false);
+  assert.equal(validateHomelabInventory({ ...legacyInventory, services: [{ ...legacyServices[1], id: 'qemu/101' }] }).ok, false);
   assert.equal(validateHomelabInventory({ ...legacyInventory, services: [{ ...legacyServices[0], description: 12 }] }).ok, false);
   assert.equal(validateHomelabInventory({ ...legacyInventory, services: [{ ...legacyServices[0], name: 'n'.repeat(81) }] }).ok, false);
 });
@@ -157,6 +215,20 @@ test('marks data stale at exactly fifteen minutes based only on collected_at', (
   assert.equal(getHomelabInventoryFreshness(result.inventory, collectedAtMs + HOMELAB_INVENTORY_MAX_AGE_MS - 1), 'current');
   assert.equal(getHomelabInventoryFreshness(result.inventory, collectedAtMs + HOMELAB_INVENTORY_MAX_AGE_MS), 'stale');
   assert.equal(getHomelabInventoryFreshness(result.inventory, collectedAtMs + HOMELAB_INVENTORY_MAX_AGE_MS + 1), 'stale');
+});
+
+test('parses collected_at as UTC and applies the fifteen-minute window to the supplied clock', () => {
+  const result = validateHomelabInventory(publishedInventory);
+  assert.equal(result.ok, true);
+  if (!result.ok) return;
+
+  const collectedAtMs = Date.parse('2026-10-27T12:16:00Z');
+  assert.equal(getHomelabInventoryFreshness(result.inventory, Date.parse('2026-10-27T12:20:00Z')), 'current');
+  assert.equal(getHomelabInventoryFreshness(result.inventory, collectedAtMs + HOMELAB_INVENTORY_MAX_AGE_MS - 1), 'current');
+  assert.equal(getHomelabInventoryFreshness(result.inventory, collectedAtMs + HOMELAB_INVENTORY_MAX_AGE_MS), 'stale');
+
+  const localOffsetTimestamp = { ...publishedInventory, collected_at: '2026-10-27T14:16:00+02:00' };
+  assert.equal(validateHomelabInventory(localOffsetTimestamp).ok, false);
 });
 
 test('rejects an inventory timestamp in the future as inconsistent', async () => {

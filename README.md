@@ -176,7 +176,7 @@ Le contrat public enrichi est :
 interface HomelabInventory {
   collected_at: string; // date UTC de collecte
   services: Array<{
-    id: string; // vm/<id> ou lxc/<id>, explicitement autorisé dans le JSON public
+    id: string; // qemu/<id> ou vm/<id> pour les VM ; lxc/<id> pour les conteneurs
     name: string; // nom d’affichage validé pour publication
     description: string; // courte description rédigée pour le public
     type: 'vm' | 'lxc';

@@ -38,6 +38,16 @@ function normalizeStatus(value: unknown): HomelabServiceStatus {
   return value === 'running' || value === 'stopped' || value === 'unknown' ? value : 'unknown';
 }
 
+function isServiceIdValidForType(id: unknown, type: unknown): id is string {
+  if (typeof id !== 'string') return false;
+  const match = id.match(/^(qemu|vm|lxc)\/([1-9]\d{0,5})$/);
+  if (!match) return false;
+
+  return type === 'vm'
+    ? match[1] === 'qemu' || match[1] === 'vm'
+    : type === 'lxc' && match[1] === 'lxc';
+}
+
 export function validateHomelabInventory(value: unknown):
   | { ok: true; inventory: HomelabInventory }
   | { ok: false; reason: string } {
@@ -61,11 +71,12 @@ export function validateHomelabInventory(value: unknown):
       return { ok: false, reason: 'Chaque service doit contenir uniquement id, name, description, type et status.' };
     }
 
-    if (service.id !== undefined
-      && (typeof service.id !== 'string'
-        || !/^(vm|lxc)\/\d{1,6}$/.test(service.id)
-        || service.id.split('/')[0] !== service.type)) {
-      return { ok: false, reason: 'id doit respecter le format vm/<id> ou lxc/<id>.' };
+    if (service.type !== 'vm' && service.type !== 'lxc') {
+      return { ok: false, reason: 'Le type de chaque service doit être vm ou lxc.' };
+    }
+
+    if (service.id !== undefined && !isServiceIdValidForType(service.id, service.type)) {
+      return { ok: false, reason: 'id doit respecter qemu/<id> ou vm/<id> pour une VM, et lxc/<id> pour un LXC.' };
     }
 
     if (service.name !== undefined
@@ -76,10 +87,6 @@ export function validateHomelabInventory(value: unknown):
     if (service.description !== undefined
       && (typeof service.description !== 'string' || service.description.length > 280)) {
       return { ok: false, reason: 'description doit être un texte de 280 caractères maximum.' };
-    }
-
-    if (service.type !== 'vm' && service.type !== 'lxc') {
-      return { ok: false, reason: 'Le type de chaque service doit être vm ou lxc.' };
     }
 
     const normalizedService: HomelabService = {

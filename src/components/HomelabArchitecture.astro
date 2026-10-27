@@ -73,7 +73,7 @@
   } from '../lib/homelab-inventory';
   import type { HomelabInventory, HomelabInventoryFreshness } from '../types/homelab-inventory';
 
-  type DisplayMode = 'normal' | 'unavailable' | 'inconsistent';
+  type DisplayMode = 'normal' | 'unavailable' | 'invalid' | 'inconsistent' | 'error';
 
   function formatCollectionTime(value: string): string {
     const formatted = new Intl.DateTimeFormat('fr-FR', {
@@ -171,7 +171,11 @@
     };
 
     const renderFailure = (reason: 'unavailable' | 'invalid' | 'future-timestamp') => {
-      displayMode = reason === 'future-timestamp' ? 'inconsistent' : 'unavailable';
+      displayMode = reason === 'future-timestamp'
+        ? 'inconsistent'
+        : reason === 'invalid'
+          ? 'invalid'
+          : 'unavailable';
       root.dataset.inventoryState = displayMode;
       renderCollectionTime(lastSnapshot);
       renderServices(lastSnapshot, true);
@@ -183,13 +187,28 @@
             ? 'La source annonce une collecte située dans le futur. Les cartes éventuelles reprennent la dernière collecte vérifiée et ne sont pas présentées comme actuelles.'
             : 'La date de collecte annoncée est située dans le futur ; l’inventaire ne peut pas être considéré comme actuel.';
         }
+      } else if (reason === 'invalid') {
+        stateElement.textContent = 'Inventaire reçu mais invalide';
+        if (noteElement) {
+          noteElement.textContent = 'Le serveur a répondu, mais le JSON ne respecte pas le contrat public attendu. Vérifiez collected_at, services et les champs autorisés.';
+        }
       } else {
-        stateElement.textContent = 'Architecture temporairement indisponible';
+        stateElement.textContent = 'Inventaire temporairement indisponible';
         if (noteElement) {
           noteElement.textContent = lastSnapshot
             ? 'La dernière lecture a échoué. Les cartes éventuelles reprennent la collecte précédente ; leur état et leur autorisation actuelle ne sont pas vérifiés.'
-            : 'Aucune donnée valide n’a pu être récupérée depuis l’inventaire public.';
+            : 'Le fichier public de l’inventaire n’a pas pu être récupéré.';
         }
+      }
+    };
+
+    const renderUnexpectedError = (error: unknown) => {
+      console.error('Erreur inattendue pendant le traitement de l’inventaire du homelab.', error);
+      displayMode = 'error';
+      root.dataset.inventoryState = displayMode;
+      stateElement.textContent = 'Erreur de traitement de l’inventaire';
+      if (noteElement) {
+        noteElement.textContent = 'La requête a abouti, mais le navigateur n’a pas pu traiter ou afficher les données reçues. Le détail technique est disponible dans la console.';
       }
     };
 
@@ -227,10 +246,14 @@
         }
 
         lastSnapshot = result.snapshot;
-        renderSnapshot(result.snapshot, result.freshness);
-        scheduleFreshnessUpdate(result.snapshot);
-      } catch {
-        if (!disposed) renderFailure('unavailable');
+        try {
+          renderSnapshot(result.snapshot, result.freshness);
+          scheduleFreshnessUpdate(result.snapshot);
+        } catch (error) {
+          renderUnexpectedError(error);
+        }
+      } catch (error) {
+        if (!disposed) renderUnexpectedError(error);
       } finally {
         if (requestTimer !== undefined) window.clearTimeout(requestTimer);
         requestTimer = undefined;

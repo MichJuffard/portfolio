@@ -29,7 +29,7 @@ Le frontend autorise seulement les propriétés racine `collected_at` et `servic
 
 | Champ | Type | Règle |
 | --- | --- | --- |
-| `id` | chaîne | Format public explicite `vm/<id>` ou `lxc/<id>`, cohérent avec `type`. |
+| `id` | chaîne | `qemu/<id>` (format Proxmox) ou `vm/<id>` (compatibilité) pour `type: vm` ; `lxc/<id>` pour `type: lxc`. |
 | `name` | chaîne | Nom d’affichage public, limité à 80 caractères. |
 | `description` | chaîne | Description publique choisie, limitée à 280 caractères. |
 | `type` | `vm` ou `lxc` | Obligatoire. |

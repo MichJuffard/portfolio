@@ -179,7 +179,7 @@
   .topology-inventory .architecture-meta { margin-top: 14px; }
   .architecture-state { display: inline-block; max-width: 100%; margin: 0 0 20px; padding: 6px 10px; border: 1px solid #66638e; border-radius: 4px; color: #d0ccff; font: .68rem/1.5 var(--mono); }
   .architecture-state[data-inventory-state="stale"], .architecture-state[data-inventory-state="inconsistent"] { border-color: #907448; color: #f2cb80; }
-  .architecture-state[data-inventory-state="unavailable"] { border-color: #8a5960; color: #ffb3b3; }
+  .architecture-state[data-inventory-state="unavailable"], .architecture-state[data-inventory-state="invalid"], .architecture-state[data-inventory-state="error"] { border-color: #8a5960; color: #ffb3b3; }
   .architecture-services { width: 100%; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 235px), 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
   .architecture-service { min-width: 0; }
   .architecture-service-card { height: 100%; min-width: 0; padding: 15px; border: 1px solid var(--line); border-radius: 5px; background: #11131b; }
