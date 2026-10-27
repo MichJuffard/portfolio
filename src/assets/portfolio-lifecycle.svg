@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-labelledby="title desc">
+  <title id="title">Cycle de vie du portfolio</title>
+  <desc id="desc">Parcours du besoin à la production, puis à la supervision et à la maintenance.</desc>
+  <rect width="960" height="540" rx="18" fill="#171b28"/>
+  <text x="52" y="66" fill="#b5b0ff" font-family="monospace" font-size="15" letter-spacing="2">CONDUITE · LIVRAISON · EXPLOITATION</text>
+  <text x="52" y="112" fill="#f3f4fa" font-family="sans-serif" font-size="32" font-weight="700">Le site au-delà de son code</text>
+  <g font-family="sans-serif">
+    <g fill="#22273a" stroke="#7773a9" stroke-width="2">
+      <rect x="52" y="160" width="250" height="105" rx="9"/>
+      <rect x="355" y="160" width="250" height="105" rx="9"/>
+      <rect x="658" y="160" width="250" height="105" rx="9"/>
+      <rect x="658" y="330" width="250" height="105" rx="9"/>
+      <rect x="355" y="330" width="250" height="105" rx="9"/>
+      <rect x="52" y="330" width="250" height="105" rx="9"/>
+    </g>
+    <g fill="#b5b0ff" font-family="monospace" font-size="13">
+      <text x="72" y="190">01 · DÉFINIR</text><text x="375" y="190">02 · CONCEVOIR</text><text x="678" y="190">03 · DÉVELOPPER</text>
+      <text x="678" y="360">04 · CONTRÔLER</text><text x="375" y="360">05 · DÉPLOYER</text><text x="72" y="360">06 · EXPLOITER</text>
+    </g>
+    <g fill="#f3f4fa" font-size="20" font-weight="600">
+      <text x="72" y="226">Besoins</text><text x="375" y="226">Astro · architecture</text><text x="678" y="226">Avec Codex</text>
+      <text x="678" y="396">GitHub Actions</text><text x="375" y="396">OVHcloud · SFTP</text><text x="72" y="396">HTTPS · maintenance</text>
+    </g>
+  </g>
+  <g fill="none" stroke="#92e6a5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M310 212h34m-10-10 10 10-10 10"/><path d="M613 212h34m-10-10 10 10-10 10"/>
+    <path d="M783 275v40m-10-10 10 10 10-10"/><path d="M650 383h-34m10-10-10 10 10 10"/>
+    <path d="M347 383h-34m10-10-10 10 10 10"/>
+  </g>
+  <text x="52" y="492" fill="#a2a8ba" font-family="sans-serif" font-size="16">Je pilote les décisions et l’exploitation. Codex m’assiste pour développer le site.</text>
+</svg>

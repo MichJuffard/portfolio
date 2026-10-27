@@ -116,6 +116,27 @@
   .project-summary h3 { margin-bottom: 7px; color: var(--text); font-size: .8rem; letter-spacing: 0; }
   .project-summary p { color: var(--muted); font-size: .8rem; line-height: 1.65; overflow-wrap: anywhere; }
   .project-summary .summary-technologies .tags { margin: 0; }
+  .portfolio-lifecycle { max-width: 1000px; margin-block: 38px 56px; padding: 24px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
+  .portfolio-lifecycle > header { max-width: 760px; margin-bottom: 22px; }
+  .portfolio-lifecycle > header .eyebrow { margin-bottom: 10px; }
+  .portfolio-lifecycle > header h2 { margin-bottom: 10px; color: var(--text); font-size: 1.35rem; }
+  .portfolio-lifecycle > header > p:last-child { color: var(--muted); font-size: .8rem; line-height: 1.6; }
+  .lifecycle-track { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 0; padding: 0; list-style: none; counter-reset: lifecycle; }
+  .lifecycle-track > li { min-width: 0; border: 1px solid var(--line); border-radius: 5px; background: #11131b; counter-increment: lifecycle; }
+  .lifecycle-track details { height: 100%; }
+  .lifecycle-track summary { display: flex; align-items: flex-start; gap: 10px; min-height: 66px; padding: 13px; cursor: pointer; list-style: none; }
+  .lifecycle-track summary::-webkit-details-marker { display: none; }
+  .lifecycle-track summary::after { content: '＋'; margin-left: auto; color: var(--accent); font-family: var(--mono); }
+  .lifecycle-track details[open] summary::after { content: '−'; }
+  .lifecycle-track summary:focus-visible { outline: 2px solid var(--accent); outline-offset: -3px; border-radius: 4px; }
+  .lifecycle-track summary strong { color: var(--text); font-size: .77rem; line-height: 1.45; }
+  .lifecycle-number { flex: 0 0 auto; color: var(--accent); font: .64rem var(--mono); }
+  .lifecycle-copy { padding: 0 13px 14px; color: var(--muted); font-size: .7rem; line-height: 1.6; overflow-wrap: anywhere; }
+  .lifecycle-copy > p { margin-bottom: 10px; }
+  .lifecycle-copy dl { display: grid; gap: 8px; }
+  .lifecycle-copy dt { color: var(--accent); font: .58rem var(--mono); }
+  .lifecycle-copy dd { margin: 2px 0 0; }
+  .lifecycle-caption { margin-top: 16px; padding-left: 12px; border-left: 2px solid var(--accent); color: var(--muted); font-size: .74rem; line-height: 1.6; }
   .project-toc { margin-block: -16px 40px; padding: 14px 18px; border-left: 2px solid var(--accent); background: #191d29; }
   .project-toc > span { color: var(--muted); font: .67rem var(--mono); }
   .project-toc ul { display: flex; flex-wrap: wrap; gap: 7px 18px; margin: 8px 0 0; padding: 0; list-style: none; }
@@ -219,6 +240,7 @@
     .terminal-body { padding: 20px; }
     .project-card { padding: 20px; }
     .project-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .lifecycle-track { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .contact-methods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .approach { gap: 35px; }
     .about-learning-row { grid-template-columns: 220px minmax(0, 1fr); gap: 20px; }
@@ -245,6 +267,7 @@
     .section { padding-block: 44px; }
     .section-heading { align-items: start; flex-direction: column; }
     .project-grid, .approach, .contact-methods { grid-template-columns: 1fr; }
+    .lifecycle-track { grid-template-columns: 1fr; }
     .project-card { padding: 24px; }
     .card-top { margin-bottom: 24px; }
     .page-intro { padding-top: 45px; }

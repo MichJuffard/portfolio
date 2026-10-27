@@ -1,19 +1,18 @@
 ---
-title: "Homelab personnel · Proxmox, WireGuard et administration Linux"
-summary: "Un serveur réutilisé et Proxmox comme terrain d’apprentissage de la virtualisation, de l’administration système et de l’accès distant sécurisé."
+title: "Homelab · Proxmox, réseau et supervision"
+summary: "Un serveur Proxmox de 8 Go pour pratiquer la virtualisation, l’accès distant sécurisé, la publication contrôlée et l’observabilité privée."
 status: "en cours"
 category: "Personnel"
 monitoringEnabled: true
-monitoringFallback: "Un LXC Alpine dédié publie les mesures courantes CPU, mémoire et rootfs du nœud Proxmox. La collecte et le transfert SFTP vers OVHcloud s’exécutent toutes les trois minutes."
 featured: true
-featuredOrder: 3
-featuredTitle: "Homelab · VPN WireGuard"
-featuredSummary: "Proxmox, l’accès distant sécurisé avec WireGuard et des expérimentations d’administration système à la demande."
-featuredTags: ["Proxmox", "WireGuard", "LXC"]
-tags: ["Proxmox VE", "LXC", "Alpine Linux", "WireGuard", "Debian", "Réseau"]
-objective: "Apprendre l’administration système et réseau, la sécurité et la virtualisation sur un serveur aux ressources limitées, puis y mener des expérimentations DevOps."
-contribution: "J’ai monté le serveur, choisi l’architecture et configuré Proxmox et WireGuard moi-même, dans une démarche d’apprentissage guidée. Codex m’assiste pour le code et la présentation du portfolio, pas pour la réalisation du VPN. La chaîne CI/CD du site est un chantier distinct que je code et comprends moi-même."
-learnings: "Administrer Proxmox, créer un LXC non privilégié, mettre en service WireGuard et OpenRC, puis valider un accès distant sécurisé depuis un réseau mobile."
+featuredOrder: 1
+featuredTitle: "Homelab · administration et observabilité"
+featuredSummary: "Proxmox, WireGuard et supervision privée conçus autour d’un serveur physique limité à 8 Go de RAM."
+featuredTags: ["Proxmox", "WireGuard", "Prometheus"]
+tags: ["Proxmox VE", "VM", "LXC", "WireGuard", "Debian", "Prometheus", "Grafana"]
+objective: "Administrer et faire évoluer un serveur Proxmox de 8 Go de RAM en travaillant la virtualisation, l’accès distant, la sécurité et l’observabilité."
+contribution: "J’ai installé et administre le serveur, défini les environnements et configuré WireGuard et la supervision. Codex intervient comme outil de développement du portfolio, pas dans la configuration de l’infrastructure."
+learnings: "Gérer des VM et LXC, sécuriser un accès distant, limiter les droits API, surveiller la capacité et séparer les données publiques des métriques privées."
 order: 1
 ---
 

@@ -7,7 +7,7 @@ featured: false
 tags: ["C", "MiniLibX", "Ray tracing", "Géométrie 3D"]
 objective: "Produire une image depuis une scène décrite en fichier .rt en calculant les rayons, intersections, matériaux et lumières."
 learnings: "Mettre en pratique les intersections et la géométrie 3D, l’éclairage et les ombres, puis les textures et formes quadriques de la version bonus."
-order: 8
+order: 9
 ---
 
 ## Donner une couleur à chaque pixel

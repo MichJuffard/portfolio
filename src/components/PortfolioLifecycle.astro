@@ -1,0 +1,83 @@
+<section class="portfolio-lifecycle" aria-labelledby="portfolio-lifecycle-title">
+  <header>
+    <p class="eyebrow">DU BESOIN À L’EXPLOITATION</p>
+    <h2 id="portfolio-lifecycle-title">Le cycle de vie du portfolio</h2>
+    <p>Ouvrez une étape pour voir son rôle, les outils documentés et la répartition des responsabilités. Les étapes restent lisibles et utilisables au clavier sans JavaScript.</p>
+  </header>
+
+  <ol class="lifecycle-track" aria-label="Étapes de conduite et d’exploitation du site">
+    <li>
+      <details open>
+        <summary><span class="lifecycle-number">01</span><strong>Besoins</strong></summary>
+        <div class="lifecycle-copy">
+          <p>Définir le public visé, le profil à présenter et les informations à publier.</p>
+          <dl><div><dt>Responsabilité</dt><dd>Je fixe les objectifs et le périmètre.</dd></div></dl>
+        </div>
+      </details>
+    </li>
+    <li>
+      <details>
+        <summary><span class="lifecycle-number">02</span><strong>Conception</strong></summary>
+        <div class="lifecycle-copy">
+          <p>Choisir un site statique avec Astro et organiser les pages, les données et les composants.</p>
+          <dl><div><dt>Décisions</dt><dd>Je choisis et valide l’architecture, le contenu et les solutions techniques.</dd></div><div><dt>Outils</dt><dd>Astro, TypeScript et CSS natif.</dd></div></dl>
+        </div>
+      </details>
+    </li>
+    <li>
+      <details>
+        <summary><span class="lifecycle-number">03</span><strong>Développement avec Codex</strong></summary>
+        <div class="lifecycle-copy">
+          <p>Codex m’assiste dans la production et l’évolution du code, des interfaces et des fonctionnalités.</p>
+          <dl><div><dt>Responsabilité</dt><dd>Je décris le besoin, oriente le résultat, relis et valide les changements. Le code assisté n’est pas présenté comme entièrement écrit par moi.</dd></div><div><dt>Outils</dt><dd>Astro, TypeScript, HTML et CSS.</dd></div></dl>
+        </div>
+      </details>
+    </li>
+    <li>
+      <details>
+        <summary><span class="lifecycle-number">04</span><strong>Gestion du code</strong></summary>
+        <div class="lifecycle-copy">
+          <p>Versionner les changements et garder le code source du site dans un dépôt GitHub.</p>
+          <dl><div><dt>Responsabilité</dt><dd>Je pilote le dépôt, les changements proposés et leur validation.</dd></div><div><dt>Outils</dt><dd>Git et GitHub.</dd></div></dl>
+        </div>
+      </details>
+    </li>
+    <li>
+      <details>
+        <summary><span class="lifecycle-number">05</span><strong>CI et contrôles</strong></summary>
+        <div class="lifecycle-copy">
+          <p>Sur les pushes vers <code>main</code> et les pull requests, la CI lance Gitleaks, les tests du dépôt et le build Astro.</p>
+          <dl><div><dt>Responsabilité</dt><dd>Je conçois, comprends et maintiens les workflows, puis j’examine leurs résultats.</dd></div><div><dt>Outils</dt><dd>GitHub Actions, Gitleaks, Node.js et npm.</dd></div></dl>
+        </div>
+      </details>
+    </li>
+    <li>
+      <details>
+        <summary><span class="lifecycle-number">06</span><strong>Déploiement</strong></summary>
+        <div class="lifecycle-copy">
+          <p>Le workflow manuel transmet l’artefact construit et déploie les fichiers sur OVHcloud par SFTP, après vérification de l’empreinte SSH.</p>
+          <dl><div><dt>Responsabilité</dt><dd>Je déclenche et valide la mise en production. Le workflow de déploiement utilise <code>workflow_dispatch</code>.</dd></div><div><dt>Outils</dt><dd>GitHub Actions, Python, Paramiko et SFTP.</dd></div></dl>
+        </div>
+      </details>
+    </li>
+    <li>
+      <details>
+        <summary><span class="lifecycle-number">07</span><strong>Production</strong></summary>
+        <div class="lifecycle-copy">
+          <p>Le site statique est publié en HTTPS sur mjuffard.fr et hébergé chez OVHcloud.</p>
+          <dl><div><dt>Responsabilité</dt><dd>Je prends en charge l’hébergement, le domaine et la mise en service.</dd></div><div><dt>État</dt><dd>Hébergement et HTTPS opérationnels. La migration vers le homelab reste prévue.</dd></div></dl>
+        </div>
+      </details>
+    </li>
+    <li>
+      <details>
+        <summary><span class="lifecycle-number">08</span><strong>Supervision et maintenance</strong></summary>
+        <div class="lifecycle-copy">
+          <p>Je valide le fonctionnement, maintiens le site et définis les améliorations à apporter ; Codex m’assiste pour les évolutions du code.</p>
+          <dl><div><dt>Limite actuelle</dt><dd>La disponibilité du site n’a pas encore de contrôle dédié. Le widget du homelab affiche des mesures limitées du nœud Proxmox, pas la disponibilité du portfolio.</dd></div><div><dt>Responsabilité</dt><dd>Je reste responsable de la sécurité, de la maintenance opérationnelle et des choix d’évolution.</dd></div></dl>
+        </div>
+      </details>
+    </li>
+  </ol>
+  <p class="lifecycle-caption">Le code n’est qu’une étape : les décisions, les contrôles, la livraison et l’exploitation relèvent aussi du projet.</p>
+</section>

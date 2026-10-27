@@ -8,7 +8,7 @@ tags: ["C", "Unix", "Arbre binaire", "Processus", "Pipes"]
 objective: "Construire en binôme un shell Unix qui exécute des commandes, avec opérateurs conditionnels, pipes et redirections."
 contribution: "En binôme, j’ai développé le moteur d’exécution et le parcours de l’arbre ; mon binôme a pris en charge le parsing et la construction de l’arbre."
 learnings: "Parcourir un arbre selon les statuts de retour, appliquer les redirections et coordonner les processus reliés par des pipes."
-order: 6
+order: 8
 ---
 
 ## Ma contribution : faire vivre l’arbre

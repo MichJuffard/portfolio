@@ -4,7 +4,7 @@ summary: "Une plateforme de Pong multijoueur en TypeScript : jeu en temps réel,
 status: "terminé"
 category: "École 42"
 featured: true
-featuredOrder: 2
+featuredOrder: 3
 featuredTitle: "Transcendance · DevOps & monitoring"
 featuredSummary: "Ma contribution : authentification, backend des tournois et DevOps/monitoring d’une plateforme multijoueur. Supervision avec Prometheus, Grafana et Alertmanager."
 featuredTags: ["Docker", "Prometheus", "Grafana"]
@@ -12,7 +12,7 @@ tags: ["TypeScript", "Fastify", "WebSocket", "Docker", "SQLite"]
 objective: "Réaliser en équipe une plateforme de Pong multijoueur avec profils, fonctions sociales, tournois, authentification et supervision."
 contribution: "Projet collectif. Mes contributions confirmées portent sur l’authentification, le backend des tournois et le DevOps/monitoring."
 learnings: "Relier des services applicatifs, un jeu temps réel via WebSocket, des conteneurs et l’observabilité avec Prometheus, Grafana et Alertmanager."
-order: 3
+order: 5
 ---
 
 ## Un jeu au cœur d’une plateforme web

@@ -10,6 +10,7 @@ import minishellPreview from '../assets/minishell-tree.svg';
 import regressionPreview from '../assets/linear-regression.svg';
 import ctfPreview from '../assets/ctf-memory.svg';
 import homelabPreview from '../assets/homelab-stack.svg';
+import portfolioPreview from '../assets/portfolio-lifecycle.svg';
 import monitoringPreview from '../assets/transcendance/monitoring.png';
 interface Props { project: CollectionEntry<'projects'>; featured?: boolean }
 const { project, featured = false } = Astro.props;
@@ -26,6 +27,7 @@ const projectPreviews = {
   'linear-regression': { image: regressionPreview.src, alt: 'Régression linéaire sur les données du projet : nuage kilométrage-prix et droite ajustée.', action: 'Explorer l’apprentissage →', width: 720, height: 420 },
   ctf: { image: ctfPreview.src, alt: 'Parcours Snowcrash, Rainfall et Override ; une copie de 9 octets dépasse un buffer de 8 octets et modifie une donnée voisine.', action: 'Explorer le parcours sécurité →', width: 960, height: 540 },
   homelab: { image: homelabPreview.src, alt: 'Schéma de l’inventaire public dynamique : Proxmox héberge des environnements VM et LXC autorisés, avec leur nom et leur état.', action: 'Architecture & VPN →', width: 960, height: 540 },
+  'portfolio-cicd': { image: portfolioPreview.src, alt: 'Étapes du portfolio : besoins, conception, développement avec Codex, contrôles, déploiement et exploitation.', action: 'Parcourir le cycle de vie →', width: 960, height: 540 },
 } as const;
 const preview = projectPreviews[project.id as keyof typeof projectPreviews];
 const transcendenceAlt = featured ? 'Capture Grafana du projet : métriques des services et connexions Nginx.' : 'Capture originale de Transcendance : une partie de Pong avec raquettes en V et obstacles.';

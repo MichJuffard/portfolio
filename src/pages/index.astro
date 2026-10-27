@@ -24,7 +24,7 @@ const projects = (await getCollection('projects')).filter(p => p.data.featured).
   </section>
   <div class="topic-strip" aria-label="Domaines de compétences"><span class="mono muted">DE LA CONFIGURATION À L’OBSERVATION</span><span>Linux</span><span>Conteneurs</span><span>Réseau</span><span>Supervision</span></div>
   <section class="section" aria-labelledby="projects-title">
-    <div class="section-heading"><div><p class="eyebrow">01 / RÉALISATIONS SÉLECTIONNÉES</p><h2 id="projects-title">De l’application à l’infrastructure.</h2></div><a class="text-link" href="/projets/">Tous les projets <span aria-hidden="true">→</span></a></div>
+    <div class="section-heading"><div><p class="eyebrow">01 / RÉALISATIONS SÉLECTIONNÉES</p><h2 id="projects-title">De l’infrastructure à son exploitation.</h2></div><a class="text-link" href="/projets/">Tous les projets <span aria-hidden="true">→</span></a></div>
     <div class="project-grid">{projects.map(project => <ProjectCard project={project} featured />)}</div>
   </section>
   <section class="approach section" aria-labelledby="approach-title"><div><p class="eyebrow">02 / MES FONDATIONS</p><h2 id="approach-title">Comprendre le logiciel<br />pour administrer les systèmes.</h2><a class="text-link" href="/a-propos/">Mon parcours et mes compétences <span aria-hidden="true">→</span></a></div><div class="approach-text"><p>Mon parcours en C et C++ m’a appris à raisonner sur les processus, la mémoire et les échanges réseau. Minishell, Webserv et ft_ping donnent une base concrète à cette compréhension.</p><p>Les CTF complètent ce regard par l’analyse des programmes et des faiblesses de sécurité. Philosophers et Push_swap ont aussi enrichi mes bases en concurrence et en algorithmique.</p></div></section>

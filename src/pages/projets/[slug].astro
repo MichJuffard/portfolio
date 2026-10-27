@@ -12,6 +12,7 @@ import LinearRegressionDemo from '../../components/LinearRegressionDemo.astro';
 import CTFDemo from '../../components/CTFDemo.astro';
 import HomelabArchitecture from '../../components/HomelabArchitecture.astro';
 import HomelabMonitoring from '../../components/HomelabMonitoring.astro';
+import PortfolioLifecycle from '../../components/PortfolioLifecycle.astro';
 export async function getStaticPaths() {
   return (await getCollection('projects')).map(project => ({ params: { slug: project.id }, props: { project } }));
 }
@@ -48,6 +49,7 @@ const outline = headings.filter(heading => heading.depth === 2);
     {project.id === 'homelab' && <HomelabArchitecture />}
     {project.id === 'homelab' && project.data.monitoringEnabled && <HomelabMonitoring />}
     {project.id === 'homelab' && !project.data.monitoringEnabled && project.data.monitoringFallback && <section class="monitor-fallback"><h2>Monitoring</h2><p>{project.data.monitoringFallback}</p></section>}
+    {project.id === 'portfolio-cicd' && <PortfolioLifecycle />}
     {project.id === 'minirt' && <MiniRTDemo />}
     {project.id === 'webserv' && <WebservDemo />}
     {project.id === 'transcendance' && <TranscendanceDemo />}

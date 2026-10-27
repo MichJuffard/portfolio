@@ -7,7 +7,7 @@ featured: false
 tags: ["C", "IPv4", "ICMP", "Sockets raw"]
 objective: "Reproduire le principe de ping : construire un Echo Request ICMP, reconnaître les réponses et mesurer le temps d’aller-retour."
 learnings: "Structures ICMP, sockets raw, checksum, lecture des réponses et suivi des délais ; l’intégration du cycle complet reste en cours."
-order: 5
+order: 3
 ---
 
 ## Comprendre un outil de diagnostic réseau

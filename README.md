@@ -35,6 +35,7 @@ node --experimental-strip-types --test scripts/*.test.mjs
 - `src/pages/` : les fichiers définissent les URL ; `projets/[slug].astro` génère une page par projet à la compilation.
 - `src/layouts/BaseLayout.astro` : structure HTML commune, navigation et pied de page.
 - `src/components/ProjectCard.astro` : carte réutilisée sur l’accueil et la liste des projets.
+- `src/components/PortfolioLifecycle.astro` : parcours interactif des responsabilités, contrôles et étapes d’exploitation du site.
 - `src/content/projects/` : fiches Markdown et métadonnées.
 - `src/content.config.ts` : validation des données des fiches.
 - `src/data/site.ts` : identité, descriptions, URL publique utilisée pour les métadonnées canonical et Open Graph, et navigation principale (Accueil, Projets, À propos, Contact).
@@ -42,7 +43,9 @@ node --experimental-strip-types --test scripts/*.test.mjs
 
 ## Ajouter une fiche
 
-Créer un fichier Markdown dans `src/content/projects/` avec les champs `title`, `summary`, `status` (`terminé`, `en cours` ou `prévu`), `tags` (liste), `category` (`École 42`, `Personnel` ou `Professionnel`), `featured` (booléen), `featuredOrder` (position optionnelle sur l’accueil) et `order` (nombre). Les champs optionnels `objective`, `contribution` et `learnings` alimentent le résumé en tête de fiche ; ne les renseigner qu’avec des faits établis et omettre une contribution lorsqu’elle n’est pas documentée. Les technologies affichées dans ce résumé proviennent des `tags`. La catégorie détermine les filtres affichés sur la page Projets ; une fiche ne figure qu’une fois dans la liste. `order` règle l’ordre éditorial de la liste et est indépendant de `featuredOrder`, qui ne concerne que l’accueil. Le nom du fichier détermine son URL. Rédiger ensuite le contenu à partir de faits vérifiés et lancer `npm run build`.
+Créer un fichier Markdown dans `src/content/projects/` avec les champs `title`, `summary`, `status` (`terminé`, `en cours` ou `prévu`), `tags` (liste), `category` (`École 42`, `Personnel` ou `Professionnel`), `featured` (booléen), `featuredOrder` (position optionnelle sur l’accueil) et `order` (nombre). Choisir `order` selon la pertinence du projet pour l’administration systèmes et réseaux : infrastructure/virtualisation, réseaux/sécurité, supervision/observabilité, automatisation/CI/CD/exploitation, puis développement et outils. Ne pas utiliser une date ni l’ordre alphabétique comme règle implicite. `featuredOrder` est indépendant et règle uniquement l’accueil.
+
+Les champs optionnels `objective`, `contribution` et `learnings` alimentent le résumé en tête de fiche ; ne les renseigner qu’avec des faits établis et omettre une contribution lorsqu’elle n’est pas documentée. Les technologies affichées dans ce résumé proviennent des `tags`. La catégorie détermine les filtres affichés sur la page Projets ; une fiche ne figure qu’une fois dans la liste. Chaque projet doit avoir un visuel interactif adapté au sujet, avec une alternative compréhensible, accès clavier et respect de `prefers-reduced-motion`. Le nom du fichier détermine son URL. Rédiger le contenu à partir de faits vérifiés et lancer `npm run build`.
 
 Les fiches détaillées commencent par une synthèse de l’objectif, de la contribution connue, des apprentissages et des technologies ; les pages longues proposent un sommaire interne. Les démonstrations pédagogiques et textes techniques existants restent en place. Snowcrash, Rainfall et Override sont regroupés dans une fiche CTF. Les contributions documentées concernent Minishell et Transcendance ; ft_ping reste en cours. Le homelab est une fiche personnelle majeure à `/projets/homelab/` ; les anciennes URL `/homelab/`, `/projets/proxmox/`, `/projets/debian-ssh/` et `/projets/diagnostic-reseau/` redirigent vers cette fiche. Elle documente maintenant le VPN WireGuard opérationnel et testé depuis un réseau mobile, ainsi que les évolutions encore à réaliser. Le problème initial de liaison du répéteur Wi-Fi avec la Freebox a été résolu via Freebox Connect.
 
@@ -59,6 +62,10 @@ La fiche [Portfolio et chaîne CI/CD](/projets/portfolio-cicd/) décrit le besoi
 **Évolutions à réaliser :** automatiser le déploiement après validation de la CI, supprimer les anciens fichiers distants de façon maîtrisée, mettre en place un déploiement atomique et un retour arrière, et migrer l’hébergement vers le homelab Proxmox. La migration est un objectif à court terme, pas une réalisation actuelle.
 
 Le dossier `dist/` contient le site compilé ; Node.js n’est pas nécessaire sur le serveur pour servir ce résultat statique.
+
+## Visuel interactif du projet Portfolio
+
+La fiche `/projets/portfolio-cicd/` utilise `src/components/PortfolioLifecycle.astro` pour parcourir huit étapes : besoins, conception, développement avec Codex, gestion du code, CI, déploiement, production, puis supervision et maintenance. Chaque étape est un élément HTML `<details>` : le parcours reste utilisable au clavier et son contenu demeure accessible sans JavaScript. Les outils et contrôles décrits reprennent les workflows présents dans le dépôt. L’absence actuelle d’un contrôle de disponibilité du site est signalée explicitement.
 
 ## Visuel miniRT
 
@@ -194,19 +201,20 @@ node --experimental-strip-types --test scripts/homelab-monitoring.test.mjs
 
 ## Utilisation de l'IA et contributions personnelles
 
-Le frontend initial de ce portfolio a été développé avec l’assistance de **Codex (OpenAI)**, sous ma direction. Je définis les objectifs, le contenu, l’organisation et l’orientation graphique du site. Codex m’a assisté pour générer et intégrer le code Astro et TypeScript, puis pour faire évoluer le portfolio.
+Le site est développé avec l’assistance de **Codex (OpenAI)**. Codex contribue à la production et à l’évolution du code, des interfaces et des fonctionnalités. Je pilote le projet : besoins, objectifs, choix techniques et architecture, validation des changements, infrastructure, hébergement, CI/CD, déploiement, supervision, sécurité, maintenance et évolution.
 
 Cette démarche me permet d'expérimenter le développement assisté par IA tout en travaillant sur la conception, l'analyse du code et l'intégration des fonctionnalités.
 
-### Ce que j'ai réalisé personnellement
+### Mes responsabilités
 
 - **Les projets présentés** : les projets techniques décrits dans ce portfolio correspondent à mon parcours, à mes réalisations et à mes apprentissages.
 - **L'infrastructure homelab** : installation, configuration, administration et expérimentation sur mon infrastructure personnelle.
-- **La mise en production** : configuration du domaine, diagnostic DNS/HTTPS et validation du déploiement SFTP vers OVHcloud, d’abord manuellement puis avec le workflow GitHub Actions.
-- **Le CI/CD** : conception, configuration et maintenance des workflows GitHub Actions pour les tests, la compilation et le déploiement, réalisés personnellement sans génération de code par Codex.
+- **La conduite du projet** : définition des besoins, orientation fonctionnelle, décisions d’architecture et validation des solutions.
+- **L’infrastructure et la production** : hébergement OVHcloud, domaine, mise en production et validation du résultat publié.
+- **Le CI/CD et l’exploitation** : responsabilité des workflows et du processus de déploiement, supervision, sécurité et maintenance opérationnelle.
 
 ### Mon approche
 
 Je considère l'IA comme un outil d'assistance au développement, et non comme un substitut à la compréhension technique.
 
-Ce portfolio me sert également de terrain d'expérimentation pour les pratiques DevOps : versionnement, tests automatisés, intégration continue, déploiement et administration de services.
+La disponibilité du site n’a pas encore de contrôle dédié. Le suivi CPU/mémoire/stockage du homelab ne doit pas être présenté comme une supervision de la disponibilité du portfolio.

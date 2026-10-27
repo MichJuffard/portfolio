@@ -33,6 +33,14 @@
 - Documenter les décisions techniques importantes.
 - Signaler clairement les tests qui n'ont pas pu être exécutés.
 
+## Principes éditoriaux et fonctionnels du portfolio
+
+- Ordonner les projets selon leur pertinence pour un profil d'administrateur systèmes et réseaux : infrastructure/virtualisation, réseaux/sécurité, supervision/observabilité, automatisation/CI/CD/exploitation, puis développement et outils. La métadonnée `order` des fiches est la source de l'ordre ; `featuredOrder` ne règle que l'accueil.
+- Chaque projet doit proposer un visuel interactif pertinent pour comprendre ou explorer son sujet. Préserver une alternative compréhensible, la navigation au clavier et le respect de `prefers-reduced-motion`.
+- Décrire honnêtement les contributions : distinguer les responsabilités de conduite, architecture, validation et exploitation de Michel de l'assistance de Codex pour le développement du site. Ne pas attribuer à Michel du code produit avec Codex.
+- Ne jamais publier de données privées d'infrastructure depuis les composants publics. Les données dynamiques doivent venir d'une liste explicitement autorisée, être filtrées par le producteur et n'exposer que des champs publics validés ; aucun secret, adresse interne ou détail d'accès.
+- Favoriser des fonctionnalités qui apportent une valeur réelle au visiteur sans ajouter de complexité ou de dépendance injustifiée.
+
 ## Déploiement
 
 - Ne jamais déployer automatiquement en production depuis une session Codex.

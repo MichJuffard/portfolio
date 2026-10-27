@@ -4,7 +4,7 @@ summary: "Une infrastructure Docker Compose de huit services : WordPress derriè
 status: "terminé"
 category: "École 42"
 featured: true
-featuredOrder: 1
+featuredOrder: 2
 featuredTitle: "Inception · infrastructure conteneurisée"
 featuredSummary: "Huit services Docker Compose : HTTPS avec Nginx, WordPress, MariaDB et Redis, avec provisionnement automatisé et volumes persistants."
 featuredTags: ["Docker Compose", "Nginx", "Volumes"]

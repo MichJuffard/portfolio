@@ -7,7 +7,7 @@ featured: false
 tags: ["CTF", "Linux", "Analyse binaire", "Mémoire", "GDB"]
 objective: "Découvrir la cybersécurité offensive par une progression de l’investigation Linux vers l’analyse des binaires et de la mémoire."
 learnings: "Observer un environnement, vérifier une hypothèse et relier le comportement d’un programme à la mémoire et aux mécanismes Linux."
-order: 7
+order: 4
 ---
 
 ## Trois projets, une progression

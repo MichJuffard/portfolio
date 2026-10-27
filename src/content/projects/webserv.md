@@ -7,7 +7,7 @@ featured: false
 tags: ["C++98", "HTTP", "Sockets", "epoll", "CGI"]
 objective: "Implémenter sous Linux un serveur HTTP qui reçoit des requêtes, route les ressources et peut exécuter des CGI."
 learnings: "Mettre en pratique les sockets, epoll, les états de parsing, les routes HTTP, les réponses et l’exécution CGI."
-order: 4
+order: 7
 ---
 
 ## Comprendre ce qui répond au navigateur

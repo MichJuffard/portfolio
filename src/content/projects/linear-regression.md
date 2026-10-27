@@ -7,7 +7,7 @@ featured: false
 tags: ["Python", "NumPy", "Matplotlib", "Descente de gradient"]
 objective: "Estimer un prix à partir du kilométrage avec un modèle linéaire appris sur les données du projet."
 learnings: "Normaliser une variable, entraîner les paramètres par descente de gradient et évaluer l’ajustement avec RMSE et R²."
-order: 9
+order: 10
 ---
 
 ## Relier des données à une estimation

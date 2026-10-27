@@ -5,7 +5,7 @@ import ProjectCard from '../../components/ProjectCard.astro';
 const projects = (await getCollection('projects')).sort((a, b) => a.data.order - b.data.order);
 const categories = [...new Set(projects.map(project => project.data.category))];
 ---
-<BaseLayout title="Projets" description="Projets d’école et expérimentations personnelles de Michel Juffard en développement, systèmes, réseaux et cybersécurité."><section class="page-intro"><p class="eyebrow">~/projets</p><h1>Des compétences<br />mises en pratique.</h1><p>Développement, systèmes, réseau et sécurité : parcourez les projets d’école et personnels, chacun présenté dans une seule catégorie.</p></section>
+<BaseLayout title="Projets" description="Projets d’école et expérimentations personnelles de Michel Juffard en systèmes, réseaux, cybersécurité, supervision et développement."><section class="page-intro"><p class="eyebrow">~/projets</p><h1>Des compétences<br />mises en pratique.</h1><p>Infrastructure, réseaux, sécurité, supervision et exploitation d’abord, puis outils et développement. L’ordre éditorial met en avant les projets les plus représentatifs de l’administration systèmes et réseaux.</p></section>
   <section class="project-browser" data-project-browser aria-label="Projets par catégorie">
     <div class="project-filters" data-project-filters role="group" aria-label="Filtrer les projets par catégorie" hidden>
       <button type="button" data-project-filter="all" aria-pressed="true">Tous</button>
