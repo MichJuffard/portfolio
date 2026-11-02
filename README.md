@@ -34,7 +34,7 @@ Le build lance aussi la vérification Astro et génère le site dans `dist/`. Le
 
 ## Contributions et responsabilités
 
-Les changements se font sur une branche dédiée et sont proposés dans une Pull Request vers `main`. Avant de la proposer, lancer les tests concernés, `npm run check` et `npm run build`. Les commits suivent Conventional Commits ; les titres et descriptions de Pull Request sont en anglais. Les règles détaillées sont dans [AGENTS.md](AGENTS.md).
+Les changements se font sur une branche dédiée et sont proposés dans une Pull Request vers `main`. Michel relit et décide seul de la fusion ; aucun changement direct sur `main` ni auto-merge n’est effectué. Après fusion, la mise en production reste assurée par les workflows GitHub Actions existants. Avant de proposer une PR, lancer les tests concernés, `npm run check` et `npm run build`. Les commits suivent Conventional Commits ; les titres et descriptions de PR sont en anglais. Les règles détaillées sont dans [AGENTS.md](AGENTS.md).
 
 Je définis les besoins, la conception fonctionnelle, l’architecture et les choix techniques. J’administre les infrastructures et services associés, conçois et maintiens la CI/CD, pilote les déploiements et l’exploitation, puis relis et valide les Pull Requests.
 
