@@ -2,6 +2,8 @@
 
 ## Git et commits
 
+- Travailler sur une branche dédiée à chaque tâche et proposer les changements dans une Pull Request vers `main` lorsque cette livraison est demandée. Ne jamais fusionner sans validation explicite.
+- Choisir un nom de branche cohérent avec le type et le périmètre du travail demandé, au format `<type>/<descriptif-court>` en minuscules et kebab-case. Utiliser les préfixes `feat/`, `fix/`, `refactor/`, `style/`, `docs/`, `test/`, `ci/` ou `chore/` selon la convention des commits ; par exemple `docs/portfolio-readme` ou `fix/project-order`.
 - Chaque tâche fonctionnelle terminée doit faire l'objet d'un commit Git.
 - Les commits doivent être atomiques : un commit correspond à une modification logique et cohérente.
 - Utiliser la convention Conventional Commits :
@@ -20,7 +22,7 @@
 - Exécuter les tests pertinents et les vérifications nécessaires avant de committer.
 - Ne committer que les fichiers concernés par la tâche.
 - Ne jamais modifier, réécrire ou supprimer des commits existants sans autorisation.
-- Ne jamais effectuer de `git push` sans demande explicite.
+- Ne jamais effectuer de `git push` sans demande explicite ; une demande de Pull Request autorise le push nécessaire à sa création.
 - Ne pas inclure dans un commit des modifications préexistantes appartenant à l'utilisateur.
 - Si la tâche nécessite plusieurs modifications indépendantes, créer plusieurs commits cohérents plutôt qu'un seul commit global.
 - À la fin, fournir les identifiants et messages des commits créés.
@@ -45,19 +47,19 @@
 
 ## Tests unitaires
 
-- Toute nouvelle fonctionnalité comportant une logique testable doit être accompagnée de tests unitaires pertinents.
-- Lorsqu'un comportement existant est modifié, vérifier les tests correspondants et les adapter si nécessaire.
-- Toute correction de bug doit inclure un test de non-régression lorsque cela est pertinent.
-- Couvrir les comportements attendus, les cas limites et les erreurs significatives.
-- Garder les tests reproductibles et indépendants des services externes ; ils ne doivent nécessiter aucun secret.
+- Codex accompagne toute nouvelle logique fonctionnelle testable de tests unitaires pertinents et adapte les tests existants lorsqu'un comportement change.
+- Toute correction de bug est accompagnée, si pertinent, d'un test de non-régression.
+- Les tests couvrent les comportements attendus, les cas limites et les erreurs significatives. Ils sont déterministes, reproductibles et indépendants des services externes ; ils ne nécessitent aucun secret.
 - Privilégier les outils et conventions de test déjà présents dans le dépôt.
-- Exécuter les tests concernés avant de proposer une Pull Request.
-- Si une modification ne justifie pas de tests, par exemple une modification documentaire ou un ajustement visuel sans logique fonctionnelle, le préciser brièvement dans le compte rendu de la Pull Request.
-- Ne pas créer de tests artificiels uniquement pour augmenter leur nombre.
+- Codex exécute les tests concernés avant de proposer une Pull Request.
+- Pour un changement qui ne justifie pas de tests — par exemple documentaire ou visuel sans logique fonctionnelle — Codex explique brièvement pourquoi dans le compte rendu de la Pull Request.
+- Ne pas créer de tests artificiels pour augmenter leur nombre.
 
 ## Principes éditoriaux et fonctionnels du portfolio
 
 - Ordonner les projets selon leur pertinence pour un profil d'administrateur systèmes et réseaux : infrastructure/virtualisation, réseaux/sécurité, supervision/observabilité, automatisation/CI/CD/exploitation, puis développement et outils. La métadonnée `order` des fiches est la source de l'ordre ; `featuredOrder` ne règle que l'accueil.
+- La page d'accueil présente toujours exactement trois projets mis en avant. Les choisir selon leur pertinence pour l'orientation professionnelle de Michel — administration systèmes et réseaux, DevOps et automatisation, infrastructure, sécurité et observabilité — en tenant compte des compétences démontrées, de la complexité technique et des responsabilités réellement exercées, pas seulement de leur date de création.
+- À l'ajout d'un projet, Codex évalue s'il mérite de remplacer l'un des trois projets mis en avant ; un nouveau projet ne devient pas automatiquement mis en avant. Tous les autres projets restent accessibles sur la page Projets.
 - Chaque projet doit proposer un visuel interactif pertinent pour comprendre ou explorer son sujet. Préserver une alternative compréhensible, la navigation au clavier et le respect de `prefers-reduced-motion`.
 - Décrire honnêtement les contributions : distinguer les responsabilités de conduite, architecture, validation et exploitation de Michel de l'assistance de Codex pour le développement du site. Ne pas attribuer à Michel du code produit avec Codex.
 - Ne jamais publier de données privées d'infrastructure depuis les composants publics. Les données dynamiques doivent venir d'une liste explicitement autorisée, être filtrées par le producteur et n'exposer que des champs publics validés ; aucun secret, adresse interne ou détail d'accès.
@@ -72,30 +74,23 @@
 
 ## Documentation et README
 
-À chaque itération de développement :
+À chaque itération, vérifier l'impact des changements sur la documentation. Le README est la vitrine concise du dépôt :
 
-1. Relire les modifications effectuées et vérifier si elles ont un impact sur la documentation du projet.
-2. Mettre à jour `README.md` dans la même itération pour refléter les fonctionnalités, choix techniques, commandes, procédures et changements de configuration réellement réalisés.
-3. Distinguer explicitement les fonctionnalités opérationnelles, les travaux en cours et les évolutions prévues.
-4. Maintenir à jour les informations relatives à l'hébergement et à la chaîne CI/CD.
-5. Ne jamais documenter une fonctionnalité comme terminée si elle n'a pas été implémentée ou validée.
-6. Si aucune modification du README n'est nécessaire, l'indiquer dans le récapitulatif final avec une courte justification.
-
-Les modifications du README doivent faire partie du commit concerné lorsqu'elles documentent directement une évolution du code.
+- Le garder professionnel et facile à parcourir ; présenter le portfolio, ses technologies, sa structure, les commandes essentielles et les pratiques de contribution sans devenir une documentation exhaustive.
+- Placer les détails techniques dans les fiches projet ou les fichiers de `docs/`, avec des liens depuis le README lorsque c'est utile. Éviter les répétitions et supprimer les informations obsolètes ou sans valeur pour un nouveau lecteur.
+- Maintenir exacts l'état opérationnel, les travaux en cours, les évolutions prévues, l'hébergement et la chaîne CI/CD. Ne jamais présenter comme terminée une fonctionnalité qui n'a pas été implémentée ou validée.
+- Inclure les modifications du README dans le commit concerné lorsqu'elles documentent directement une évolution du code. Si aucune modification n'est nécessaire, l'indiquer brièvement dans le récapitulatif final.
 
 **Contexte actuel :** le portfolio est hébergé chez OVHcloud. Sa migration vers le homelab est un objectif à court terme, mais elle n'est pas encore réalisée.
 
 ## CI/CD — Périmètre d'intervention de Codex
 
-La chaîne CI/CD du portfolio constitue un projet d'apprentissage personnel. Je souhaite concevoir, comprendre, maintenir et faire évoluer moi-même les workflows GitHub Actions ainsi que les scripts associés au déploiement.
+La CI/CD du portfolio est un projet d'apprentissage DevOps que Michel conçoit, configure et maintient personnellement. Codex ne modifie aucun de ses éléments sans demande explicite de Michel, y compris :
 
-En conséquence :
+- Workflows GitHub Actions, configuration des pipelines et scripts CI/CD ou de déploiement.
+- Mécanismes de déploiement, règles de protection des branches, secrets, autorisations, variables et paramètres GitHub.
+- Déclencheurs automatiques, notamment ceux associés aux pushes.
 
-- Ne jamais créer, modifier, supprimer ou réorganiser les fichiers de `.github/workflows/` ou les scripts CI/CD sans demande explicite de ma part.
-- Ne pas modifier les secrets, variables d'environnement, permissions ou paramètres de déploiement.
-- Ne pas ajouter de déclenchement automatique, notamment sur `push`, sans autorisation explicite.
-- Si une évolution du portfolio nécessite une adaptation de la CI/CD, signaler le besoin et expliquer les modifications recommandées, sans les appliquer.
-- Les commandes de vérification existantes (tests, contrôles de qualité, build) peuvent être exécutées pour valider les changements, sans modifier leur configuration.
-- Documenter dans le README les évolutions CI/CD effectivement réalisées et validées.
+Codex produit du code testable et exécute localement les tests pertinents. Toute décision ou évolution concernant l'intégration des tests aux pipelines relève de Michel. Si une évolution du portfolio nécessite un changement de CI/CD, Codex signale le besoin et peut décrire la recommandation sans l'appliquer. Les vérifications existantes peuvent être exécutées localement sans en modifier la configuration.
 
-**Objectif :** utiliser Codex comme assistant pour le développement du portfolio, tout en conservant la maîtrise technique et pédagogique de la chaîne CI/CD.
+Le README décrit uniquement l'état CI/CD effectivement réalisé et validé.

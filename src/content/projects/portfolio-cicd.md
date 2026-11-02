@@ -3,11 +3,7 @@ title: "Portfolio · conduite, CI/CD et exploitation"
 summary: "Un site statique Astro hébergé sur OVHcloud : je pilote les besoins, l’architecture, la CI/CD et l’exploitation, avec Codex comme outil de développement."
 status: "en cours"
 category: "Personnel"
-featured: true
-featuredOrder: 4
-featuredTitle: "Portfolio · conduite et exploitation"
-featuredSummary: "Je définis le besoin, valide les choix et exploite le site ; Codex m’assiste dans le développement du code."
-featuredTags: ["GitHub Actions", "SFTP", "OVHcloud"]
+featured: false
 tags: ["Astro", "TypeScript", "GitHub Actions", "Gitleaks", "Python", "Paramiko", "SFTP"]
 objective: "Publier un portfolio statique et comprendre chaque étape qui mène du dépôt GitHub au site accessible en HTTPS."
 contribution: "Je pilote le projet : besoins, décisions d’architecture, CI/CD, hébergement, déploiement, validation et maintenance. Codex m’assiste pour produire et faire évoluer le code du site."
