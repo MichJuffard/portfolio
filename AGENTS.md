@@ -3,6 +3,7 @@
 ## Git et commits
 
 - Travailler sur une branche dédiée à chaque tâche et proposer les changements dans une Pull Request vers `main` lorsque cette livraison est demandée. Ne jamais fusionner sans validation explicite.
+- Choisir un nom de branche cohérent avec le type et le périmètre du travail demandé, au format `<type>/<descriptif-court>` en minuscules et kebab-case. Utiliser les préfixes `feat/`, `fix/`, `refactor/`, `style/`, `docs/`, `test/`, `ci/` ou `chore/` selon la convention des commits ; par exemple `docs/portfolio-readme` ou `fix/project-order`.
 - Chaque tâche fonctionnelle terminée doit faire l'objet d'un commit Git.
 - Les commits doivent être atomiques : un commit correspond à une modification logique et cohérente.
 - Utiliser la convention Conventional Commits :
