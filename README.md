@@ -30,6 +30,10 @@ node --experimental-strip-types --test scripts/*.test.mjs
 
 `check` vérifie les types et les composants. `build` effectue cette vérification puis génère le site statique dans `dist/`. `preview` permet de consulter ce résultat localement. Aucune connexion au homelab n’est nécessaire.
 
+## Branches et revue des changements
+
+Chaque tâche se fait sur une branche dédiée et passe par une Pull Request vers `main` lorsque sa publication est demandée explicitement. La PR résume les changements, les vérifications effectuées et les points de vigilance. Michel examine puis décide seul de la fusion ; aucune modification n'est poussée directement sur `main` et aucun auto-merge n'est activé. Après fusion, la mise en production reste assurée par les workflows GitHub Actions existants.
+
 ## Comprendre la structure
 
 - `src/pages/` : les fichiers définissent les URL ; `projets/[slug].astro` génère une page par projet à la compilation.

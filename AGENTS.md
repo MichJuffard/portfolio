@@ -24,6 +24,15 @@
 - Si la tâche nécessite plusieurs modifications indépendantes, créer plusieurs commits cohérents plutôt qu'un seul commit global.
 - À la fin, fournir les identifiants et messages des commits créés.
 
+## Branches et Pull Requests
+
+- Pour chaque tâche, travailler sur une branche dédiée ; ne jamais modifier directement `main`.
+- Réaliser les changements, vérifications et commits selon les règles ci-dessus.
+- Ne jamais effectuer de `git push` sans demande explicite. Une demande explicite de publication ou de création de PR autorise uniquement le push de la branche de travail correspondante et l'ouverture d'une Pull Request vers `main` ; elle n'autorise jamais un push vers `main`.
+- La PR doit contenir un résumé des changements, les vérifications et tests effectués, ainsi que les éventuels points de vigilance. Fournir son lien à Michel pour revue.
+- Ne jamais fusionner une PR ni activer l'auto-merge. Michel est seul responsable de la décision de fusionner dans `main`.
+- Après fusion, la mise en production reste assurée par les workflows GitHub Actions existants.
+
 ## Méthode de travail
 
 - Respecter l'architecture existante du portfolio Astro.
