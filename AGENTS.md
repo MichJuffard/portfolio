@@ -33,6 +33,18 @@
 - Documenter les décisions techniques importantes.
 - Signaler clairement les tests qui n'ont pas pu être exécutés.
 
+## Tests unitaires
+
+- Toute nouvelle fonctionnalité comportant une logique testable doit être accompagnée de tests unitaires pertinents.
+- Lorsqu'un comportement existant est modifié, vérifier les tests correspondants et les adapter si nécessaire.
+- Toute correction de bug doit inclure un test de non-régression lorsque cela est pertinent.
+- Couvrir les comportements attendus, les cas limites et les erreurs significatives.
+- Garder les tests reproductibles et indépendants des services externes ; ils ne doivent nécessiter aucun secret.
+- Privilégier les outils et conventions de test déjà présents dans le dépôt.
+- Exécuter les tests concernés avant de proposer une Pull Request.
+- Si une modification ne justifie pas de tests, par exemple une modification documentaire ou un ajustement visuel sans logique fonctionnelle, le préciser brièvement dans le compte rendu de la Pull Request.
+- Ne pas créer de tests artificiels uniquement pour augmenter leur nombre.
+
 ## Principes éditoriaux et fonctionnels du portfolio
 
 - Ordonner les projets selon leur pertinence pour un profil d'administrateur systèmes et réseaux : infrastructure/virtualisation, réseaux/sécurité, supervision/observabilité, automatisation/CI/CD/exploitation, puis développement et outils. La métadonnée `order` des fiches est la source de l'ordre ; `featuredOrder` ne règle que l'accueil.
