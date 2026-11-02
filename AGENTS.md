@@ -81,7 +81,7 @@
 - Maintenir exacts l'état opérationnel, les travaux en cours, les évolutions prévues, l'hébergement et la chaîne CI/CD. Ne jamais présenter comme terminée une fonctionnalité qui n'a pas été implémentée ou validée.
 - Inclure les modifications du README dans le commit concerné lorsqu'elles documentent directement une évolution du code. Si aucune modification n'est nécessaire, l'indiquer brièvement dans le récapitulatif final.
 
-**Contexte actuel :** le portfolio est hébergé chez OVHcloud. Sa migration vers le homelab est un objectif à court terme, mais elle n'est pas encore réalisée.
+**Contexte actuel :** le portfolio est en production sur `mjuffard.fr`, dans l'offre gratuite Free Hosting d'OVHcloud incluse avec le domaine. Le homelab reste un environnement d'apprentissage, d'expérimentation et de supervision. Une migration future du portfolio reste théoriquement possible, mais elle n'est ni planifiée ni prioritaire.
 
 ## CI/CD — Périmètre d'intervention de Codex
 

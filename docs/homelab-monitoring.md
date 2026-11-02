@@ -4,7 +4,7 @@
 
 Le widget de `/projets/homelab/` lit le JSON public [`/data/homelab-metrics.json`](https://mjuffard.fr/data/homelab-metrics.json). Le navigateur ne contacte que ce fichier statique ; il n’appelle jamais l’API Proxmox.
 
-Le LXC `102 — monitoring` produit le fichier public destiné au widget et le transfère périodiquement par SFTP vers OVHcloud. L’implémentation actuellement documentée interroge l’API Proxmox en HTTPS avec validation TLS et un jeton limité à `Sys.Audit`. Un script shell utilise `curl` et `jq` pour calculer les trois pourcentages. Le portfolio demeure hébergé chez OVHcloud ; sa migration vers le homelab reste prévue.
+Un collecteur utilise l’API Proxmox pour produire le fichier destiné au widget et le transfère périodiquement vers OVHcloud. Le navigateur ne lit qu’un fichier statique ; il ne contacte jamais l’API Proxmox. Le portfolio reste en production indépendamment sur l’offre gratuite Free Hosting d’OVHcloud, incluse avec `mjuffard.fr` ; sa migration vers le homelab n’est ni planifiée ni prioritaire.
 
 ## Format du fichier public
 
@@ -29,15 +29,17 @@ Les champs manquants, supplémentaires, mal typés ou hors limites font rejeter 
 - Une date invalide ou située dans le futur, une réponse HTTP en erreur, un JSON malformé ou une erreur réseau affiche un état d’indisponibilité sans fabriquer de valeurs. Si une dernière mesure est conservée en mémoire, elle est présentée comme ancienne ou comme dernière mesure connue, jamais comme l’état actuel.
 - La page Astro est générée statiquement. Le build ne télécharge pas le JSON et ne dépend donc ni du homelab ni de la disponibilité de l’endpoint. Sans JavaScript, le widget indique qu’aucune mesure n’a été reçue.
 
+Le serveur Proxmox est actuellement volontairement éteint. OVHcloud continue de servir le portfolio et les fichiers JSON déjà publiés, mais les collectes ne sont pas renouvelées pendant cet arrêt. La dernière mesure peut donc être signalée comme ancienne ou indisponible par le widget, selon son horodatage et l’état de la requête.
+
 Les barres sont des éléments HTML `<meter>` avec des libellés accessibles. Les changements de pourcentage et l’heure ne sont pas dans une région live ; le statut textuel n’est annoncé que lorsqu’il change.
 
 ## Périmètre du widget public
 
-Ce widget affiche seulement les mesures courantes CPU, mémoire et stockage système (`rootfs`) du nœud Proxmox. Il ne présente pas l’état des services et n’est pas une plateforme complète d’observabilité. Ces données publiques sont distinctes de la supervision privée du LXC `103 — observability`.
+Ce widget affiche seulement les mesures CPU, mémoire et stockage système (`rootfs`) du nœud Proxmox publiées dans le dernier fichier reçu. Il ne présente pas l’état des services et n’est pas une plateforme complète d’observabilité. Ces données publiques restent distinctes de la supervision privée du homelab.
 
 ## Observabilité privée
 
-Le LXC `103 — observability` héberge Prometheus, PVE Exporter et Grafana OSS. PVE Exporter interroge l’API Proxmox en HTTPS en vérifiant le certificat TLS et au moyen d’un jeton API dédié en lecture seule. Prometheus collecte toutes les 60 secondes et conserve sept jours de données. Prometheus et PVE Exporter écoutent localement ; Grafana reste privé et son accès administratif se fait par tunnel SSH. Le tableau de bord suit les ressources globales et par VM/LXC ainsi que les stockages `local` et `local-lvm`.
+Le homelab a été configuré avec Prometheus, PVE Exporter et Grafana OSS pour la supervision privée. PVE Exporter interroge l’API Proxmox en HTTPS avec validation du certificat et un jeton API en lecture seule. La configuration de Prometheus prévoit une collecte toutes les 60 secondes et sept jours de rétention. Prometheus et PVE Exporter écoutent localement ; Grafana reste privé et son accès administratif se fait par tunnel SSH. Le tableau de bord suit les ressources globales et par VM/LXC ainsi que les stockages `local` et `local-lvm`. Cette pile n’est pas nécessairement accessible en permanence : le serveur Proxmox est actuellement éteint.
 
 Cette pile aide à comprendre et optimiser un hôte physique de 8 Go de RAM. Ses métriques détaillées ne sont pas publiées sur le site. Les composants Proxmox et Grafana ne sont pas interrogés par le navigateur.
 

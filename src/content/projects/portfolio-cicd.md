@@ -13,7 +13,7 @@ order: 6
 
 ## Le besoin : publier et comprendre le parcours
 
-Le portfolio est un site statique développé avec **Astro**, **TypeScript** et du CSS natif, hébergé chez OVHcloud. J’en définis les besoins et les objectifs, j’oriente les décisions techniques et valide les changements. **Codex m’assiste pour développer le code, les interfaces et les fonctionnalités** ; je ne présente pas ce code comme ayant été entièrement écrit par moi-même.
+Le portfolio est un site statique développé avec **Astro**, **TypeScript** et du CSS natif, en production sur `mjuffard.fr` dans l’offre gratuite Free Hosting d’OVHcloud incluse avec le domaine. J’en définis les besoins et les objectifs, j’oriente les décisions techniques et valide les changements. **Codex m’assiste pour développer le code, les interfaces et les fonctionnalités** ; je ne présente pas ce code comme ayant été entièrement écrit par moi-même.
 
 Je pilote aussi le parcours de livraison et d’exploitation, de la gestion du code à la mise en production. La chaîne de publication est un projet d’apprentissage que je conçois, comprends et maintiens moi-même.
 
@@ -42,14 +42,13 @@ Le parcours m’amène à distinguer le succès d’un build de celui d’un dé
 
 ## État actuel et prochaines étapes
 
-**Opérationnel :** le site statique est hébergé chez OVHcloud, le domaine est servi en HTTPS, les workflows GitHub Actions exécutent les contrôles et le build, et le premier déploiement SFTP manuel a réussi.
+**Opérationnel :** le site statique est en production chez OVHcloud sur `mjuffard.fr`, servi en HTTPS. Les workflows GitHub Actions exécutent les contrôles et le build ; le déploiement manuel transfère les fichiers générés vers l’hébergement.
 
 **À améliorer ou à réaliser :**
 
 - déclencher le déploiement automatiquement après validation de la CI ;
 - définir une suppression maîtrisée des anciens fichiers distants ;
 - mettre en place un déploiement atomique et une stratégie de retour arrière ;
-- migrer à court terme l’hébergement vers le homelab administré avec Proxmox ;
 - mettre en place une vérification de disponibilité du portfolio, distincte du suivi des ressources du nœud Proxmox.
 
-Le widget de la fiche homelab affiche désormais les mesures courantes CPU, mémoire et stockage rootfs du nœud Proxmox. Il ne vérifie pas la disponibilité du portfolio ni celle des services hébergés.
+Le widget de la fiche homelab affiche les dernières mesures publiées du nœud Proxmox et leur état de fraîcheur. Il ne vérifie pas la disponibilité du portfolio ni celle des services hébergés.
