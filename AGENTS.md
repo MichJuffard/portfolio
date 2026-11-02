@@ -14,6 +14,7 @@
   - `ci:` intégration et déploiement continus
   - `chore:` maintenance
 - Utiliser des messages de commit courts, descriptifs et en anglais.
+- Rédiger en anglais les titres, descriptions et échanges associés aux Pull Requests.
 - Avant chaque commit, vérifier les changements avec `git diff` et `git status`.
 - Ne jamais inclure de secrets, d'informations sensibles ou de fichiers générés.
 - Exécuter les tests pertinents et les vérifications nécessaires avant de committer.
