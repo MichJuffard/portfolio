@@ -13,7 +13,7 @@ Le ton doit rester naturel et professionnel. Présenter les compétences comme d
 - Les démonstrations interactives sont locales et pédagogiques ; leurs algorithmes ne sont pas à modifier dans une mission éditoriale ou visuelle.
 - La page Projets reste consultable sans JavaScript ; les filtres apparaissent lorsque le script est disponible.
 - Les fiches de projet commencent par un résumé de l’objectif, des contributions établies, des apprentissages et des technologies. Les informations inconnues sont omises. Les fiches longues peuvent proposer un sommaire interne.
-- Le domaine public n’est pas encore choisi. `src/data/site.ts` centralise sa future configuration ; les métadonnées absolues sont omises tant qu’il est vide.
+- Le portfolio Astro est en production sur `mjuffard.fr`, dans l’offre gratuite Free Hosting d’OVHcloud incluse avec le domaine. Michel gère les déploiements par la CI/CD et le transfert des fichiers générés. `src/data/site.ts` centralise la configuration du domaine public.
 
 ## Identité et contact publics
 
@@ -33,11 +33,13 @@ Ne publier ni adresse IP, ni nom interne de machine, ni secret, ni autre coordon
 
 ## Homelab
 
-Le projet personnel utilise Proxmox VE pour héberger une VM Debian administrée en SSH. Le serveur Proxmox était relié en Ethernet à un répéteur Wi-Fi Free, lui-même associé sans fil à la Freebox. Proxmox ne joignait pas correctement sa passerelle. Les investigations ont porté notamment sur ARP et la connectivité. Le problème venait de la liaison ou de l’association du répéteur avec la Freebox. Sa configuration dans Freebox Connect a rétabli la connexion ; les échanges entre le Mac, Proxmox et le réseau local ont ensuite fonctionné.
+Le homelab Proxmox est un environnement réel d’apprentissage et d’expérimentation, avec plusieurs VM et LXC. Les services installés et configurés comprennent WireGuard pour l’accès distant sécurisé, Prometheus, Grafana et PVE Exporter pour la supervision, ainsi qu’un collecteur qui utilise l’API Proxmox pour préparer l’inventaire et les métriques publiés sur le portfolio.
 
-Le diagnostic est présenté sous la forme symptôme, investigation, cause, résolution et enseignements, sans adresses, noms internes, sorties de commande ni mesures inventées. La fiche décrit comme prévues ou en cours les évolutions non réalisées, notamment l’hébergement avec Nginx, un accès VPN, l’automatisation et une supervision réelle.
+La publication de l’inventaire est autorisée explicitement par le tag `portfolio-public` ; les descriptions visibles proviennent d’un catalogue éditorial. Le site lit des fichiers JSON statiques sur OVHcloud et ne contacte pas Proxmox directement. La supervision et les données présentées sur le portfolio s’appuient donc sur l’infrastructure réelle, pas sur un échantillon fictif.
 
-Le widget de monitoring est une démonstration : son échantillon est fictif et n’entraîne aucune requête réseau par défaut. Aucun accès direct à Proxmox ni API réelle n’est configuré.
+Le serveur Proxmox est actuellement éteint pour économiser ses ressources et l’électricité lorsqu’il n’est pas nécessaire. Le projet n’est pas abandonné : l’arrêt suspend les services hébergés et les nouvelles collectes, tandis que le portfolio reste en ligne indépendamment chez OVHcloud. Les derniers fichiers publiés peuvent devenir anciens ; le site affiche l’heure de collecte et conserve ses états de disponibilité et de fraîcheur. Les services configurés ne sont pas présentés comme accessibles en permanence.
+
+Les premières investigations réseau, notamment le diagnostic d’une connectivité défaillante entre Proxmox et sa passerelle, sont des éléments historiques résolus. Les prochaines améliorations citées dans les fiches restent des pistes d’apprentissage et ne décrivent pas nécessairement des travaux planifiés.
 
 ## Références de maintenance
 
@@ -47,4 +49,4 @@ Le widget de monitoring est une démonstration : son échantillon est fictif et 
 - Tests des démos : `node --experimental-strip-types --test scripts/*.test.mjs`
 - Les redirections historiques vers `/projets/homelab/` et `/projets/ctf/` restent déclarées dans `astro.config.mjs`.
 
-Le site est conçu pour un futur hébergement statique. Aucun déploiement, configuration Nginx de production ou changement du homelab ne fait partie de l’état actuel.
+Le portfolio statique Astro est déjà en production sur `mjuffard.fr` chez OVHcloud. Le homelab reste consacré à l’apprentissage, aux expérimentations et à la supervision ; une migration future du portfolio reste théoriquement possible, mais elle n’est ni planifiée ni prioritaire.

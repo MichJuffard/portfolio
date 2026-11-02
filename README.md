@@ -2,7 +2,7 @@
 
 Portfolio professionnel en français consacré à mes projets en systèmes, réseaux, cybersécurité et DevOps, dans le cadre de mon parcours informatique à 42 Lyon. Il présente les compétences que je développe au travers de projets d’école et de mon homelab.
 
-Le site statique est publié sur [mjuffard.fr](https://mjuffard.fr) et hébergé chez **OVHcloud**. La migration vers mon homelab est prévue, mais n’a pas encore été réalisée.
+Le site statique Astro est en production sur [mjuffard.fr](https://mjuffard.fr), dans l’offre gratuite **Free Hosting** d’OVHcloud incluse avec le domaine. Je gère les déploiements par CI/CD et le transfert des fichiers générés. Le homelab reste dédié à l’apprentissage, aux expérimentations et à la supervision ; sa migration n’est ni planifiée ni prioritaire.
 
 [GitHub](https://github.com/MichJuffard) · [LinkedIn](https://www.linkedin.com/in/michel-juffard/) · [Me contacter](mailto:juffard.michel@gmail.com)
 
@@ -38,7 +38,7 @@ Les changements se font sur une branche dédiée et sont proposés dans une Pull
 
 Je définis les besoins, la conception fonctionnelle, l’architecture et les choix techniques. J’administre les infrastructures et services associés, conçois et maintiens la CI/CD, pilote les déploiements et l’exploitation, puis relis et valide les Pull Requests.
 
-**Codex (OpenAI) m’assiste dans le développement du site** : implémentation et modification du code, création et maintenance des tests, corrections et améliorations du code, et documentation. Le code est donc développé avec une assistance IA ; le pilotage technique, l’administration et l’exploitation restent sous ma responsabilité.
+**Codex (OpenAI) m’assiste dans le développement du site** : implémentation et modification du code, création et maintenance des tests unitaires, corrections et documentation. Le code est donc développé avec une assistance IA ; le pilotage technique, l’administration et l’exploitation restent sous ma responsabilité.
 
 La CI GitHub Actions actuelle exécute l’analyse Gitleaks, les tests et le build ; le déploiement de production vers OVHcloud est déclenché manuellement. Je suis responsable de la conception, de la configuration et de la maintenance de ces workflows, ainsi que de toute décision ou évolution concernant les tests dans les pipelines. Codex ne les modifie que sur demande explicite.
 
