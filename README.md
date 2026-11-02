@@ -1,6 +1,6 @@
 # Michel Juffard — Systèmes, réseaux & cybersécurité
 
-Portfolio professionnel en français : Michel Juffard, étudiant à 42 Lyon et tuteur, en recherche d’une alternance en systèmes, réseaux ou cybersécurité. Le site statique est construit avec Astro, TypeScript, Markdown et CSS natif. Il est publié en HTTPS sur [mjuffard.fr](https://mjuffard.fr) et hébergé actuellement chez OVHcloud. Les faits de référence se trouvent dans `PROJECT.md`.
+Portfolio professionnel en français : Michel Juffard, étudiant à 42 Lyon et tuteur, en recherche prioritaire d’un stage de 6 mois en informatique puis d’une alternance de 2 ans, principalement dans la région de Grenoble. Après la Piscine de juillet 2023, sa formation à 42 Lyon a commencé en novembre 2023. Le site statique est construit avec Astro, TypeScript, Markdown et CSS natif. Il est publié en HTTPS sur [mjuffard.fr](https://mjuffard.fr) et hébergé actuellement chez OVHcloud. Les faits de référence se trouvent dans `PROJECT.md`.
 
 ## Contact public
 
